@@ -14,15 +14,7 @@ const app = express()
 const PORT = process.env.PORT || 4000
 const __dirname = path.resolve();
 
-app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "http://localhost:5174",
-    "https://livechat-1-fcqq.onrender.com", // ✅ Your frontend URL
-  ],
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-}));
+app.use(cors());
 app.use(express.json());
 
 app.use(authRoutes);
