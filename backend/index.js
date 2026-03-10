@@ -14,7 +14,15 @@ const app = express()
 const PORT = process.env.PORT || 4000
 const __dirname = path.resolve();
 
-app.use(cors());
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "https://livechat-frontend-zpcx.onrender.com", 
+  ],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+}));
 app.use(express.json());
 
 app.use(authRoutes);
@@ -25,13 +33,6 @@ app.get("/", (req, res) => {
     message: "Server is running!",
     status: "OK" 
   });
-});
-
-
-app.use(express.static(path.join(__dirname, "frontend/dist")));
-
-app.get(/.*/, (req, res) => {
-  res.sendFile(path.join(__dirname, "frontend/dist/index.html"));
 });
 
 const server = http.createServer(app)
