@@ -11,6 +11,7 @@ const ChatPage = () => {
   const [images, setImages] = useState([]);
   const [text, setText] = useState("");
   const [preview, setPreview] = useState(null);
+   const [locationLoading, setLocationLoading] = useState(false);
   const fileInputRef = useRef(null);
   const bottomRef = useRef(null);
 
@@ -67,6 +68,7 @@ const ChatPage = () => {
     }
   };
 
+
   const handleSend = async () => {
     if (!text.trim() && images.length === 0) return;
     try {
@@ -86,6 +88,41 @@ const ChatPage = () => {
     } catch (error) {
       console.error("Send message error:", error);
     }
+  };
+  const handleSendLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation supported nahi hai is browser mein");
+      return;
+    }
+
+    setLocationLoading(true);
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+
+        try {
+          const formData = new FormData();
+          formData.append("lat", lat);
+          formData.append("lng", lng);
+
+          await axios.post(`${API_BASE_URL}/sendMessage/${userId}`, formData, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        } catch (error) {
+          console.error("Location send error:", error);
+          alert("Location send nahi hui, dobara try karo");
+        } finally {
+          setLocationLoading(false);
+        }
+      },
+      (err) => {
+        console.error("Geolocation error:", err);
+        alert("Location access allow karo browser mein");
+        setLocationLoading(false);
+      }
+    );
   };
 
   if (!selectedUser) {
@@ -179,6 +216,14 @@ const ChatPage = () => {
           }
           className="border p-1"
         />
+        <button
+          onClick={handleSendLocation}
+          disabled={locationLoading}
+          title="Apni location bhejo"
+          className="text-xl px-2 py-1 rounded-full hover:bg-gray-100 disabled:opacity-50 transition"
+        >
+          {locationLoading ? "⏳" : "📍"}
+        </button>
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}

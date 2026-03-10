@@ -7,7 +7,7 @@ const DashboardPage = () => {
   const [activeTab, setActiveTab] = useState("images");
   const [allMedia, setAllMedia] = useState({ allVideo: [], allImage: [] });
   const token = localStorage.getItem("token");
- const navigate = useNavigate();
+  const navigate = useNavigate();
   useEffect(() => {
     const fetchAllMedia = async () => {
       try {
@@ -28,7 +28,7 @@ const DashboardPage = () => {
       {/* Header */}
       <div className="flex justify-between bg-gray-100 px-4 py-4 border-b border-gray-200">
         <h1 className="font-bold">My Dashboard</h1>
-        <div onClick={()=>navigate("/profile")} className="">profile</div>
+        <div onClick={() => navigate("/profile")} className="">profile</div>
       </div>
 
       {/* Tabs */}
@@ -51,6 +51,7 @@ const DashboardPage = () => {
         >
           Document
         </button>
+
       </div>
 
       {/* Media Grid */}

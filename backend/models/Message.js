@@ -19,7 +19,11 @@ const messageSchema = mongoose.Schema(
     }],
     videos:[{
       type:String
-    }]
+    }],
+    location:{
+      lat:Number,
+      lng:Number
+    }
   },
   { timestamps: true },
 );

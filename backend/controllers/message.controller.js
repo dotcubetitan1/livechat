@@ -35,7 +35,7 @@ export const getMessagesByUserId = async (req, res) => {
 
 export const sendMessage = async (req, res) => {
   try {
-    const { text } = req.body;
+    const { text ,lat , lng} = req.body;
     const { id: receiverId } = req.params;
     const senderId = req.user._id;
 
@@ -66,6 +66,7 @@ export const sendMessage = async (req, res) => {
       text: text || "",
       images: imageUrl || "",
       videos: videoUrl || "",
+      location: lat && lng ? { lat, lng } : null
     });
 
     const io = getIO();
