@@ -7,7 +7,7 @@ const storage = new CloudinaryStorage({
   params: {
     folder: "chat_media",
     resource_type:"auto",
-    allowed_formats: ["jpg", "jpeg", "png", "webp","mp4" , "mov","mkv","webm"],
+    allowed_formats: ["jpg", "jpeg", "png", "webp","mp4","mp3" , "mov","mkv","webm"],
   },
 });
 const upload = multer({ storage });

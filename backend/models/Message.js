@@ -20,6 +20,9 @@ const messageSchema = mongoose.Schema(
     videos:[{
       type:String
     }],
+    audios:[{
+      type:String
+    }],
     location:{
       lat:Number,
       lng:Number

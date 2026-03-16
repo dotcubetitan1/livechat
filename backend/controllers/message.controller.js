@@ -25,7 +25,7 @@ export const getMessagesByUserId = async (req, res) => {
         { senderId: myId, receiverId: userToChatId },
         { senderId: userToChatId, receiverId: myId },
       ],
-    });
+    }).sort({ createdAt: 1 });;
     res.status(200).json(messages);
   } catch (error) {
     console.log("Error in getMessages controller: ", error.message);
@@ -35,46 +35,48 @@ export const getMessagesByUserId = async (req, res) => {
 
 export const sendMessage = async (req, res) => {
   try {
-    const { text ,lat , lng} = req.body;
+    console.log("000000000")
+    const { text, lat, lng } = req.body;
     const { id: receiverId } = req.params;
     const senderId = req.user._id;
-
     if (senderId.equals(receiverId)) {
       return res
         .status(400)
         .json({ message: "Cannot send message to yourself" });
     }
-
     const receiverExists = await User.exists({ _id: receiverId });
     if (!receiverExists) {
       return res.status(404).json({ message: "Receiver not found" });
     }
     const imageUrl = [];
     const videoUrl = [];
+    const audioUrl = [];
 
     req.files?.forEach((file) => {
       if (file.mimetype.startsWith("image")) {
         imageUrl.push(file.path);
       } else if (file.mimetype.startsWith("video")) {
         videoUrl.push(file.path);
+      } else if (file.mimetype.startsWith("audio")) {
+        audioUrl.push(file.path);
       }
     });
-
     const newMessage = await Message.create({
       senderId,
       receiverId,
       text: text || "",
-      images: imageUrl || "",
-      videos: videoUrl || "",
+      images: imageUrl,
+      videos: videoUrl,
+      audios: audioUrl,
       location: lat && lng ? { lat, lng } : null
     });
-
     const io = getIO();
     const receiverSocketId = getReceiverSocketId(receiverId);
 
     if (receiverSocketId) {
-      io.to(receiverSocketId).emit("newMessage", newMessage);
       console.log("📨 Message sent to receiver via socket");
+      io.to(receiverSocketId).emit("newMessage", newMessage);
+      
     }
     io.to(senderId.toString()).emit("newMessage", newMessage);
 
@@ -94,10 +96,12 @@ export const getAllMedia = async (req, res) => {
 
     const allVideos = [...new Set(messages.flatMap(m => m.videos || []))];
     const allImages = [...new Set(messages.flatMap(m => m.images || []))];
+    const allAudios = [...new Set(messages.flatMap(m => m.audios || []))];
 
     res.status(200).json({
       allVideo: allVideos,
       allImage: allImages,
+      allAudio: allAudios
     });
   } catch (error) {
     res.status(500).json({ message: "server error" });
