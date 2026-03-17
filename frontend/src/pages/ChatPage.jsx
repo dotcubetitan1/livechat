@@ -3,6 +3,7 @@ import axios from "axios";
 import { useParams, useOutletContext } from "react-router-dom";
 import { API_BASE_URL } from "../api/config";
 import { GrGallery } from "react-icons/gr";
+import { FaMicrophone } from "react-icons/fa";
 
 const ChatPage = () => {
   const { userId } = useParams();
@@ -16,6 +17,8 @@ const ChatPage = () => {
   const [showMenu, setShowMenu] = useState(false);
   const fileInputRef = useRef(null);
   const bottomRef = useRef(null);
+  const mediaRecorderRef = useRef(null)
+  const audioChunksRef = useRef([])
 
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user"));
@@ -28,20 +31,19 @@ const ChatPage = () => {
   }, [userId]);
 
   useEffect(() => {
-    if (socketRef?.current) {
-      socketRef.current.on("newMessage", (msg) => {
-        if (msg.senderId === userId || msg.receiverId === userId) {
-          setMessages((prev) => [...prev, msg]);
-        }
-      });
-    }
+    console.log("socket inside effect:", socketRef?.current)
+    if (!socketRef?.current) return;  
+    socketRef.current.on("newMessage", (msg) => {
+      if (msg.senderId?.toString() === userId || msg.receiverId?.toString() === userId) {
+        setMessages((prev) => [...prev, msg]);
+      }
+    });
 
     return () => {
-      if (socketRef?.current) {
-        socketRef.current.off("newMessage");
-      }
+      socketRef.current.off("newMessage");
     };
-  }, [userId, socketRef]);
+
+  }, [userId, socketRef, socketRef?.current]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -127,6 +129,40 @@ const ChatPage = () => {
       }
     );
   };
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      console.log(stream)
+      console.log(stream)
+      const mediaRecorder = new MediaRecorder(stream)
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.ondataavailable = (event) => {
+        audioChunksRef.current.push(event.data)
+      }
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" })
+        const file = new File([audioBlob], "voice.webm", {
+          type: "audio/webm",
+        });
+        const formData = new FormData();
+        formData.append("images", file);
+        await axios.post(`${API_BASE_URL}/sendMessage/${userId}`, formData, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        audioChunksRef.current = []
+      }
+      mediaRecorder.start();
+    } catch (err) {
+      console.error("Mic permission error:", err);
+      alert("Microphone permission allow karo");
+    }
+
+  };
+  const stopRecording = () => {
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+    }
+  }
 
   if (!selectedUser) {
     return (
@@ -150,7 +186,7 @@ const ChatPage = () => {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 bg-gray-50">
         {messages.map((msg) => {
-          const isMe = msg.senderId?.toString() === user._id;
+          const isMe = msg.senderId?.toString() === user._id.toString();
           return (
             <div
               key={msg._id}
@@ -351,6 +387,14 @@ const ChatPage = () => {
           placeholder="Send Message..."
           className="flex-1 border rounded-full px-4 py-2 outline-none"
         />
+        <button
+          onMouseDown={startRecording}
+          onMouseUp={stopRecording}
+          onMouseLeave={stopRecording}
+          className="bg-gray-200 px-3 py-2 rounded-full"
+        >
+          <FaMicrophone />
+        </button>
         <button
           onClick={handleSend}
           className="bg-green-500 text-white px-4 py-2 rounded-full"
