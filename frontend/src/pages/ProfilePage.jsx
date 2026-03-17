@@ -3,7 +3,6 @@ import { API_BASE_URL } from "../api/config";
 import { useState, useEffect } from "react";
 
 const ProfilePage = () => {
-  // const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
@@ -14,7 +13,8 @@ const ProfilePage = () => {
   const [updating, setUpdating] = useState(false);
 
   const token = localStorage.getItem("token");
-  const user = JSON.parse(localStorage.getItem("token"));
+
+  const user = JSON.parse(localStorage.getItem("user"));
 
   const fetchProfile = async () => {
     try {
@@ -83,12 +83,24 @@ const ProfilePage = () => {
         <div className="flex justify-center items-center">
           <div className="w-125 mt-7  ">
             <div className="border-2 border-gray-200  rounded-2xl p-10">
-              <div className="text-center">
+              <label className="w-40 h-40 mx-auto rounded-full bg-green-500 flex justify-center items-center">
+                {previewImage ? (
+                 <img src={previewImage} className="w-full h-full object-cover rounded-full" />
+                ) : (
+                  <span className="text-white text-5xl font-semibold">{formData.fullName?.charAt(0)?.toUpperCase()}</span>
+                )}
+
                 <input
                   type="file"
-                  className="bg-amber-200 h-40 w-40 rounded-full"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files[0]
+                    setFormData((prev) => ({ ...prev, profilePic: file }));
+                    setPreviewImage(URL.createObjectURL(file))
+                  }}
                 />
-              </div>
+              </label>
               <form
                 action=""
                 onSubmit={handleUpdateProfile}
@@ -121,13 +133,14 @@ const ProfilePage = () => {
                   />
                 </div>
                 {/* Button */}
+                <div className="text-center">
                 <button
-                  type="submit"
-                  onClick={fetchProfile}
-                  className="px-4 bg-gray-500 text-white py-2 rounded-lg font-semibold hover:bg-gray-600 transition"
+                type="submit"
+                className="px-4 bg-green-500 text-white py-2 rounded-lg font-semibold hover:bg-green-600 transition"
                 >
-                  Refresh
+                  Update profile
                 </button>
+                </div>
               </form>
             </div>
           </div>
