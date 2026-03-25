@@ -1,4 +1,4 @@
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { io } from "socket.io-client";
@@ -8,12 +8,15 @@ import { API_BASE_URL } from "./api/config";
 
 const MainLayout = () => {
   const [contacts, setContacts] = useState([]);
-  const [selectedUser, setSelectedUser] = useState(null);
   const [onlineUser, setOnlineUser] = useState([]);
   const socketRef = useRef();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const token = localStorage.getItem("token");
+
+  // 👇 Detect chat page
+  const isChatPage = location.pathname.includes("/chat");
 
   useEffect(() => {
     const fetchContacts = async () => {
@@ -36,10 +39,6 @@ const MainLayout = () => {
       transports: ["websocket"],
     });
 
-    socketRef.current.on("connect", () => {
-      console.log("Connected:", socketRef.current.id);
-    });
-
     socketRef.current.on("getOnlineUsers", (users) => {
       setOnlineUser(users);
     });
@@ -50,29 +49,33 @@ const MainLayout = () => {
   }, [token]);
 
   const handleUserSelect = (contact) => {
-    setSelectedUser(contact);
     navigate(`/chat/${contact._id}`);
   };
 
   return (
-    <div className="w-screen h-screen bg-gray-100 flex">
-      {/* LEFT SIDEBAR — FIXED */}
-      <div className="w-1/5 overflow-auto bg-gray-100 p-3">
+    <div className="w-screen h-screen flex relative">
+
+      {/* 🔥 Sidebar */}
+      <div
+        className={`
+        bg-gray-100 p-3 transition-all duration-300
+        w-full md:w-1/4 lg:w-1/5
+        ${isChatPage ? "hidden md:block" : "block"}
+      `}
+      >
+        {/* Dashboard Button */}
         <div
           onClick={() => navigate("/dashboard")}
           className="px-4 py-3 rounded-2xl font-semibold bg-green-600 flex items-center justify-between cursor-pointer"
         >
-          <h2 className="text-white font-bold">My Dashboard</h2>
-          <p>
-            <MdDashboard className="text-white" />
-          </p>
+          <h2 className="text-white font-bold">Dashboard</h2>
+          <MdDashboard className="text-white" />
         </div>
 
-        <div className="px-4 py-3 font-semibold flex items-center justify-between">
-          <h2>My Channels</h2>
-          <p>
-            <FaPlusCircle className="hover:text-green-600 text-gray-500" />
-          </p>
+        {/* Contacts */}
+        <div className="px-4 py-3 font-semibold flex justify-between">
+          <h2>Chats</h2>
+          <FaPlusCircle className="text-gray-500" />
         </div>
 
         {contacts.map((c) => {
@@ -82,15 +85,15 @@ const MainLayout = () => {
             <div
               key={c._id}
               onClick={() => handleUserSelect(c)}
-              className="p-4 flex gap-3 cursor-pointer hover:bg-gray-100"
+              className="p-3 flex gap-3 cursor-pointer hover:bg-gray-200 rounded-lg"
             >
               <div className="relative">
-                <div className="w-10 h-10 rounded-full bg-green-600 text-white flex items-center justify-center font-semibold">
+                <div className="w-10 h-10 rounded-full bg-green-600 text-white flex items-center justify-center">
                   {c.fullName?.charAt(0)}
                 </div>
 
                 {isOnline && (
-                  <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
+                  <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></span>
                 )}
               </div>
 
@@ -105,9 +108,14 @@ const MainLayout = () => {
         })}
       </div>
 
-      {/* RIGHT SIDE — CHANGEABLE */}
-      <div className="w-4/5 flex flex-col">
-        <Outlet context={{ selectedUser, socketRef }} />
+      {/* 🔥 Right Section */}
+      <div
+        className={`
+        flex flex-col flex-1 bg-white transition-all duration-300
+        ${!isChatPage ? "hidden md:flex" : "flex"}
+      `}
+      >
+        <Outlet context={{ socketRef }} />
       </div>
     </div>
   );

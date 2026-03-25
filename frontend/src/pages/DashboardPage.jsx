@@ -26,7 +26,7 @@ const DashboardPage = () => {
   return (
     <div className="flex flex-col bg-white h-full">
       {/* Header */}
-      <div className="flex justify-between bg-gray-100 px-4 py-4 border-b border-gray-200">
+      <div className="  flex justify-between bg-gray-100 px-4 py-4 border-b border-gray-200 ">
         <h1 className="font-bold">My Dashboard</h1>
         <div onClick={() => navigate("/profile")} className="">profile</div>
       </div>
@@ -57,22 +57,26 @@ const DashboardPage = () => {
       {/* Media Grid */}
       <div className="flex-1 px-4 py-4 overflow-auto">
         {activeTab === "videos" && (
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {allMedia.allVideo.map((video, i) => (
               <video
                 key={i}
                 src={video}
                 controls
-                className="w-full h-40 rounded-lg"
+                className="w-full h-32 sm:h-40 rounded-lg"
               />
             ))}
           </div>
         )}
 
         {activeTab === "images" && (
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {allMedia.allImage.map((img, i) => (
-              <img key={i} src={img} className="w-full h-40 rounded-lg" />
+              <img
+                key={i}
+                src={img}
+                className="w-full h-32 sm:h-40 object-cover rounded-lg"
+              />
             ))}
           </div>
         )}

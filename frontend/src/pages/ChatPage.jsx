@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import axios from "axios";
-import { useParams, useOutletContext } from "react-router-dom";
+import { useParams, useOutletContext ,useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../api/config";
 import { GrGallery } from "react-icons/gr";
 import { FaMicrophone } from "react-icons/fa";
@@ -19,7 +19,7 @@ const ChatPage = () => {
   const bottomRef = useRef(null);
   const mediaRecorderRef = useRef(null)
   const audioChunksRef = useRef([])
-
+  const navigate = useNavigate();
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user"));
 
@@ -32,7 +32,7 @@ const ChatPage = () => {
 
   useEffect(() => {
     console.log("socket inside effect:", socketRef?.current)
-    if (!socketRef?.current) return;  
+    if (!socketRef?.current) return;
     socketRef.current.on("newMessage", (msg) => {
       if (msg.senderId?.toString() === userId || msg.receiverId?.toString() === userId) {
         setMessages((prev) => [...prev, msg]);
@@ -60,7 +60,6 @@ const ChatPage = () => {
       console.error("Error fetching user details:", error);
     }
   };
-
   const fetchMessages = async (id) => {
     try {
       const res = await axios.get(`${API_BASE_URL}/getMessagesByUserId/${id}`, {
@@ -71,8 +70,6 @@ const ChatPage = () => {
       console.error("Error fetching messages:", error);
     }
   };
-
-
   const handleSend = async () => {
     if (!text.trim() && images.length === 0) return;
     try {
@@ -132,8 +129,6 @@ const ChatPage = () => {
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      console.log(stream)
-      console.log(stream)
       const mediaRecorder = new MediaRecorder(stream)
       mediaRecorderRef.current = mediaRecorder;
       mediaRecorder.ondataavailable = (event) => {
@@ -177,6 +172,13 @@ const ChatPage = () => {
 
       {/* Header */}
       <div className="px-4 py-3 border-b flex items-center gap-2 bg-white">
+        {/* Mobile Back Button */}
+        <button
+          onClick={() => navigate("/dashboard")}
+          className="md:hidden text-2xl"
+        >
+          ←
+        </button>
         <div className="w-9 h-9 rounded-full bg-green-600 text-white flex items-center justify-center font-semibold">
           {selectedUser.fullName?.charAt(0)}
         </div>
@@ -229,9 +231,26 @@ const ChatPage = () => {
                   <a
                     href={`https://www.google.com/maps?q=${msg.location.lat},${msg.location.lng}`}
                     target="_blank"
-                    className="text-blue-600  block mt-2"
+                    rel="noreferrer"
+                    className="block mt-2 rounded-lg overflow-hidden w-full max-w-xs"
                   >
-                    📍 View Location
+                    {/* Map Preview Box */}
+                    <div
+                      className="relative w-full h-36 rounded-lg overflow-hidden border border-gray-200 shadow-sm"
+                      style={{
+                        backgroundImage: `url(https://tile.openstreetmap.org/15/${Math.floor((msg.location.lng + 180) / 360 * Math.pow(2, 15))}/${Math.floor((1 - Math.log(Math.tan(msg.location.lat * Math.PI / 180) + 1 / Math.cos(msg.location.lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, 15))}.png)`,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                      }}
+                    >
+                      {/* Pin Icon */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-3xl drop-shadow-lg">📍</span>
+                      </div>
+                    </div>
+                    <span className="text-blue-600 text-sm mt-1 block text-center">
+                      📍 View on Google Maps
+                    </span>
                   </a>
                 )}
               </div>
