@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import axios from "axios";
-import { useParams, useOutletContext ,useNavigate } from "react-router-dom";
+import { useParams, useOutletContext, useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../api/config";
 import { GrGallery } from "react-icons/gr";
 import { FaMicrophone } from "react-icons/fa";
@@ -19,6 +19,7 @@ const ChatPage = () => {
   const bottomRef = useRef(null);
   const mediaRecorderRef = useRef(null)
   const audioChunksRef = useRef([])
+
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user"));
@@ -45,8 +46,19 @@ const ChatPage = () => {
 
   }, [userId, socketRef, socketRef?.current]);
 
+  const isFirstLoad = useRef(true);
+
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (!bottomRef.current) return;
+
+    if (isFirstLoad.current) {
+      // First load → direct jump
+      bottomRef.current.scrollIntoView({ behavior: "auto" });
+      isFirstLoad.current = false;
+    } else {
+      // New messages → smooth scroll
+      bottomRef.current.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messages]);
 
   const fetchUserDetails = async (id) => {
@@ -174,7 +186,7 @@ const ChatPage = () => {
       <div className="px-4 py-3 border-b flex items-center gap-2 bg-white">
         {/* Mobile Back Button */}
         <button
-          onClick={() => navigate("/dashboard")}
+          onClick={() => navigate("/chat")}
           className="md:hidden text-2xl"
         >
           ←

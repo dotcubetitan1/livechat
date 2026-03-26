@@ -15,7 +15,7 @@ function App() {
 
       {/* LAYOUT ROUTES */}
       <Route path="/" element={<MainLayout />}>
-       <Route path="chat" element={<div className="flex items-center justify-center h-screen font-semibold">Select user to start chat</div>} />
+       <Route path="chat" element={<div className="md:flex hidden items-center justify-center h-screen font-semibold">Select user to start chat</div>} />
         <Route path="chat/:userId" element={<ChatPage />} />  
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="profile" element={<ProfilePage/>}/>

@@ -37,10 +37,11 @@ const LoginPage = () => {
 
   return (
     <>
-      <div className="w-screen h-screen flex items-center justify-center   bg-linear-to-br from-green-600 via-slate-800 to-green-700 p-4">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 border border-white">
-          <div className="flex flex-col space-y-4 text-black">
-            <h2 className="text-center font-bold text-gray-600 text-2xl">Login</h2>
+      <div className="w-screen h-screen flex items-center justify-center ">
+        <div className=" bg-gray-200 backdrop-blur-ls rounded-2xl md:p-12 p-6 shadow-2xl">
+          {/* Card Container */}
+          <div className="flex flex-col space-y-4 text-black ">
+            <h2 className="text-center font-bold text-gray-600 md:text-2xl text-[24px]">Login</h2>
 
             <div>
               <h1>Email</h1>

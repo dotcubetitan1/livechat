@@ -8,6 +8,7 @@ const DashboardPage = () => {
   const [allMedia, setAllMedia] = useState({ allVideo: [], allImage: [] });
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
+
   useEffect(() => {
     const fetchAllMedia = async () => {
       try {
@@ -19,39 +20,45 @@ const DashboardPage = () => {
         console.error("Error fetching media:", err);
       }
     };
-
     fetchAllMedia();
   }, [token]);
 
   return (
     <div className="flex flex-col bg-white h-full">
+
       {/* Header */}
-      <div className="  flex justify-between bg-gray-100 px-4 py-4 border-b border-gray-200 ">
-        <h1 className="font-bold">My Dashboard</h1>
-        <div onClick={() => navigate("/profile")} className="">profile</div>
+      <div className="flex items-center justify-between bg-gray-100 px-4 py-4 border-b border-gray-200">
+        {/* ✅ Mobile back button */}
+        <button
+          onClick={() => navigate("/chat")}
+          className="md:hidden text-2xl mr-2"
+        >
+          ←
+        </button>
+        <h1 className="font-bold flex-1">My Dashboard</h1>
+        <div
+          onClick={() => navigate("/profile")}
+          className="cursor-pointer text-green-600 font-medium"
+        >
+          Profile
+        </div>
       </div>
 
       {/* Tabs */}
-      <div className="px-4 py-4 flex justify-end gap-4 border-b border-gray-300">
-        <button
-          onClick={() => setActiveTab("videos")}
-          className="hover:bg-green-600 hover:text-white border px-3 py-2 rounded-full border-gray-300"
-        >
-          Videos
-        </button>
-        <button
-          onClick={() => setActiveTab("images")}
-          className="hover:bg-green-600 hover:text-white border px-3 py-2 rounded-full border-gray-300"
-        >
-          Images
-        </button>
-
-        <button
-          className="hover:bg-green-600 hover:text-white border px-3 py-2 rounded-full border-gray-300"
-        >
-          Document
-        </button>
-
+      <div className="px-4 py-3 flex gap-3 border-b border-gray-300 overflow-x-auto">
+        {["images", "videos", "documents"].map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-4 py-2 rounded-full border text-sm capitalize whitespace-nowrap transition
+              ${activeTab === tab
+                ? "bg-green-600 text-white border-green-600"
+                : "border-gray-300 hover:bg-green-600 hover:text-white"
+              }`}
+          >
+            {tab}
+          </button>
+        ))}
       </div>
 
       {/* Media Grid */}
@@ -59,25 +66,24 @@ const DashboardPage = () => {
         {activeTab === "videos" && (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {allMedia.allVideo.map((video, i) => (
-              <video
-                key={i}
-                src={video}
-                controls
-                className="w-full h-32 sm:h-40 rounded-lg"
+              <video key={i} src={video} controls
+                className="w-full h-32 sm:h-40 rounded-lg object-cover"
               />
             ))}
           </div>
         )}
-
         {activeTab === "images" && (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {allMedia.allImage.map((img, i) => (
-              <img
-                key={i}
-                src={img}
+              <img key={i} src={img}
                 className="w-full h-32 sm:h-40 object-cover rounded-lg"
               />
             ))}
+          </div>
+        )}
+        {activeTab === "documents" && (
+          <div className="flex items-center justify-center h-40 text-gray-400">
+            No documents found
           </div>
         )}
       </div>

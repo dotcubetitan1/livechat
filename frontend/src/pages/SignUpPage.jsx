@@ -32,11 +32,11 @@ const SignUpPage = () => {
   };
   return (
     <>
-      <div className="w-screen h-screen flex items-center justify-center bg-linear-to-br   from-green-600 via-slate-800 to-green-700 p-4 ">
-        <div className=" bg-white backdrop-blur-ls rounded-2xl shadow-2xl p-8 border border-white ">
+      <div className="w-screen h-screen flex items-center justify-center ">
+        <div className=" bg-gray-200 backdrop-blur-ls rounded-2xl md:p-12 p-6 shadow-2xl">
           {/* Card Container */}
-          <div className="flex flex-col space-y-3 text-black">
-            <h2 className="text-center font-bold text-gray-600 text-2xl">Create Account</h2>
+          <div className="flex flex-col md:space-y-4 space-y-6 text-black ">
+            <h2 className="text-center font-bold text-gray-600 md:text-2xl text-[24px]">Create Account</h2>
             <div>
               <h1>Full Name</h1>
               <input
