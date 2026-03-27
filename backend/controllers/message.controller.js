@@ -1,6 +1,7 @@
 import { getReceiverSocketId, getIO } from "../lib/socket.js";
 import Message from "../models/Message.js";
 import User from "../models/User.js";
+import sendPushNotification from "../services/notification.js"
 
 export const getAllContacts = async (req, res) => {
   try {
@@ -25,7 +26,7 @@ export const getMessagesByUserId = async (req, res) => {
         { senderId: myId, receiverId: userToChatId },
         { senderId: userToChatId, receiverId: myId },
       ],
-    }).sort({ createdAt: 1 });;
+    }).sort({ createdAt: 1 });
     res.status(200).json(messages);
   } catch (error) {
     console.log("Error in getMessages controller: ", error.message);
@@ -60,6 +61,7 @@ export const sendMessage = async (req, res) => {
         audioUrl.push(file.path);
       }
     });
+
     const newMessage = await Message.create({
       senderId,
       receiverId,
@@ -69,19 +71,36 @@ export const sendMessage = async (req, res) => {
       audios: audioUrl,
       location: lat && lng ? { lat, lng } : null
     });
+
+    const receiver = await User.findById(receiverId)
+
+    if (receiver?.fcmToken) {
+      await sendPushNotification(
+        receiver.fcmToken,
+        req.user.fullName,
+        text,
+        {
+          image: imageUrl[0] || "",
+          video: videoUrl[0] || "",
+          audio: audioUrl[0] || ""
+
+        }
+      )
+    }
+
     const io = getIO();
     const receiverSocketId = getReceiverSocketId(receiverId);
 
     if (receiverSocketId) {
       console.log("📨 Message sent to receiver via socket");
       io.to(receiverSocketId).emit("newMessage", newMessage);
-      
+
     }
     io.to(senderId.toString()).emit("newMessage", newMessage);
 
     res.status(201).json(newMessage);
   } catch (error) {
-    console.error("❌ Error in sendMessage:", error);
+    console.error("Error in sendMessage:", error);
     res.status(500).json({
       error: "Internal server error",
       details: error.message,

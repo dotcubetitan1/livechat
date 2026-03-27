@@ -3,7 +3,7 @@ import User from "../models/User.js";
 
 export const socketAuthMiddleware = async (socket, next) => {
   try {
-    // ✅ token auth se lo (NOT headers)
+    
     const token = socket.handshake.auth?.token;
 
     if (!token) {

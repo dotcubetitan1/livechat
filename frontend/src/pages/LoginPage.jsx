@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { API_BASE_URL } from "../api/config.js";
+import getFCMToken from "../utils/getFcmToken.js"
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -23,11 +24,24 @@ const LoginPage = () => {
         email: formData.email,
         password: formData.password,
       });
-
       console.log("login response", res.data);
-
       localStorage.setItem("token", res.data.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.data.user));
+
+      const token = res.data.data.token;
+      
+      const fcmToken = await getFCMToken()
+      console.log(fcmToken);
+      if (fcmToken) {
+        await axios.post(`${API_BASE_URL}/update-fcm-token`, { fcmToken },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        )
+      }
+
       navigate("/chat");
 
     } catch (error) {
