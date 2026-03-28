@@ -72,6 +72,9 @@ export const sendMessage = async (req, res) => {
       location: lat && lng ? { lat, lng } : null
     });
 
+    const io = getIO();
+    const receiverSocketId = getReceiverSocketId(receiverId);
+
     const receiver = await User.findById(receiverId)
 
     const imageCount = imageUrl.length;
@@ -94,7 +97,8 @@ export const sendMessage = async (req, res) => {
         notificationText = parts.join(", ")
       }
     }
-    if (receiver?.fcmToken) {
+    if (receiver?.fcmToken && !receiverSocketId) {
+      console.log("0000000000")
       await sendPushNotification(
         receiver.fcmToken,
         req.user.fullName,
@@ -107,8 +111,6 @@ export const sendMessage = async (req, res) => {
         }
       )
     }
-    const io = getIO();
-    const receiverSocketId = getReceiverSocketId(receiverId);
 
     if (receiverSocketId) {
       console.log("Message sent to receiver via socket");

@@ -10,28 +10,28 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-messaging.onBackgroundMessage((payload) => {
-    self.registration.showNotification(
-        payload.notification.title,
-        {
-            body: payload.notification.body,
-            image: payload.notification.image,
-            data: payload.data, // ✅ ye sahi hai
-        }
-    );
-});
+// messaging.onBackgroundMessage((payload) => {
+//     self.registration.showNotification(
+//         payload.notification.title,
+//         {
+//             body: payload.notification.body,
+//             image: payload.notification.image,
+//             data: payload.data, // ✅ ye sahi hai
+//         }
+//     );
+// });
 
-self.addEventListener("notificationclick", function (event) {
-  event.notification.close();
+// self.addEventListener("notificationclick", function (event) {
+//   event.notification.close();
 
-  const data = event.notification.data || {};
-  const videoUrl = data.videoUrl;
+//   const data = event.notification.data || {};
+//   const videoUrl = data.videoUrl;
 
-  let url = "/chat";
+//   let url = "/chat";
 
-  if (videoUrl && videoUrl !== "") {
-    url = videoUrl;
-  }
+//   if (videoUrl && videoUrl !== "") {
+//     url = videoUrl;
+//   }
 
-  event.waitUntil(clients.openWindow(url));
-});
+//   event.waitUntil(clients.openWindow(url));
+// });

@@ -9,7 +9,7 @@ const firebaseConfig = {
     messagingSenderId: "760427615893",
     appId: "1:760427615893:web:aca876a869f5e6c8e66d9c",
     measurementId: "G-CPQ7Q48RX3",
-    databaseURL:"https://livechat-ed1ea-default-rtdb.firebaseio.com"
+    // databaseURL:"https://livechat-ed1ea-default-rtdb.firebaseio.com"
 };
 const app = initializeApp(firebaseConfig);
 
