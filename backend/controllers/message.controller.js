@@ -72,8 +72,7 @@ export const sendMessage = async (req, res) => {
       location: lat && lng ? { lat, lng } : null
     });
 
-    const io = getIO();
-    const receiverSocketId = getReceiverSocketId(receiverId);
+    const receiver = await User.findById(receiverId)
 
     const imageCount = imageUrl.length;
     const videoCount = videoUrl.length;
@@ -95,23 +94,27 @@ export const sendMessage = async (req, res) => {
         notificationText = parts.join(", ")
       }
     }
-    if (receiverSocketId) {
-      console.log("Message sent via socket");
-      io.to(receiverSocketId).emit("newMessage", newMessage);
+    if (receiver?.fcmToken) {
+      await sendPushNotification(
+        receiver.fcmToken,
+        req.user.fullName,
+        notificationText,
+        {
+          imageCount,
+          videoCount,
+          audioCount,
 
-    } else {
-      const receiver = await User.findById(receiverId).select("fcmToken");
-      if (receiver?.fcmToken) {
-        const sender = await User.findById(senderId).select("fullName");
-        await sendPushNotification(
-          receiver.fcmToken,
-          sender.fullName,
-          notificationText,
-          { imageCount, videoCount, audioCount }
-        );
-      }
+        }
+      )
     }
-    // io.to(senderId.toString()).emit("newMessage", newMessage);
+    const io = getIO();
+    const receiverSocketId = getReceiverSocketId(receiverId);
+
+    if (receiverSocketId) {
+      console.log("Message sent to receiver via socket");
+      io.to(receiverSocketId).emit("newMessage", newMessage);
+    }
+    io.to(senderId.toString()).emit("newMessage", newMessage);
 
     res.status(201).json(newMessage);
   } catch (error) {

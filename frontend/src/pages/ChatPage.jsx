@@ -46,7 +46,7 @@ const ChatPage = () => {
       socketRef.current.off("newMessage");
     };
 
-  }, [userId, socketRef]);
+  }, [userId, socketRef, socketRef?.current]);
 
   const isFirstLoad = useRef(true);
 
