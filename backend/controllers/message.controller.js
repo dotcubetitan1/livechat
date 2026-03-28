@@ -74,27 +74,45 @@ export const sendMessage = async (req, res) => {
 
     const receiver = await User.findById(receiverId)
 
+    const imageCount = imageUrl.length;
+    const videoCount = videoUrl.length;
+    const audioCount = audioUrl.length;
+
+    let notificationText = text || ""
+    if (!text) {
+      if (imageCount && !videoCount && !audioCount) {
+        notificationText = `${imageCount} Photo`
+      } else if (videoCount && !imageCount && !audioCount) {
+        notificationText = `${videoCount} Video`
+      } else if (audioCount && !imageCount && !videoCount) {
+        notificationText = `${audioCount} Audio`
+      } else {
+        let parts = [];
+        if (imageCount) parts.push(`${imageCount} Photo`);
+        if (videoCount) parts.push(`${videoCount} Video`);
+        if (audioCount) parts.push(`${audioCount} Audio`);
+        notificationText = parts.join(", ")
+      }
+    }
     if (receiver?.fcmToken) {
       await sendPushNotification(
         receiver.fcmToken,
         req.user.fullName,
-        text,
+        notificationText,
         {
-          image: imageUrl[0] || "",
-          video: videoUrl[0] || "",
-          audio: audioUrl[0] || ""
+          imageCount,
+          videoCount,
+          audioCount,
 
         }
       )
     }
-
     const io = getIO();
     const receiverSocketId = getReceiverSocketId(receiverId);
 
     if (receiverSocketId) {
-      console.log("📨 Message sent to receiver via socket");
+      console.log("Message sent to receiver via socket");
       io.to(receiverSocketId).emit("newMessage", newMessage);
-
     }
     io.to(senderId.toString()).emit("newMessage", newMessage);
 

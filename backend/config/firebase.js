@@ -1,12 +1,13 @@
 import admin from "firebase-admin";
-import fs from "fs";
-
-const serviceAccount = JSON.parse(
-  fs.readFileSync(new URL("./livechat-ed1ea-firebase-adminsdk-fbsvc-3ebc423c49.json", import.meta.url))
-);
-
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
+  credential: admin.credential.cert({
+    type: process.env.FIREBASE_TYPE,
+    project_id: process.env.FIREBASE_PROJECT_ID,
+    private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
+    private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+    client_email: process.env.FIREBASE_CLIENT_EMAIL,
+    client_id: process.env.FIREBASE_CLIENT_ID,
+  }),
 });
 
 export default admin;
