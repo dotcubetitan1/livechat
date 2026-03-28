@@ -79,8 +79,15 @@ const MainLayout = () => {
               className="p-3 flex gap-3 cursor-pointer hover:bg-gray-200 rounded-lg"
             >
               <div className="relative">
-                <div className="w-10 h-10 rounded-full bg-green-600 text-white flex items-center justify-center">
-                  {c.fullName?.charAt(0)}
+                <div className="w-10 h-10 rounded-full bg-green-600 text-white flex items-center justify-center overflow-hidden">
+                  {
+                    c.profilePic ? (<img src={c.profilePic} alt="profile" className="w-full h-full object-cover" />) : (
+                    <span className="font-semibold">
+                      {c.fullName?.charAt(0)}
+                    </span>)
+                  }
+
+
                 </div>
                 {isOnline && (
                   <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></span>

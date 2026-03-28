@@ -15,6 +15,8 @@ const ChatPage = () => {
   const [preview, setPreview] = useState(null);
   const [locationLoading, setLocationLoading] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [isRecording, setIsRecording] = useState(false)
+
   const fileInputRef = useRef(null);
   const bottomRef = useRef(null);
   const mediaRecorderRef = useRef(null)
@@ -139,6 +141,7 @@ const ChatPage = () => {
     );
   };
   const startRecording = async () => {
+    setIsRecording(true)
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream)
@@ -166,6 +169,7 @@ const ChatPage = () => {
 
   };
   const stopRecording = () => {
+    setIsRecording(false);
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
     }
@@ -416,13 +420,14 @@ const ChatPage = () => {
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSend()}
           placeholder="Send Message..."
-          className="flex-1 border rounded-full px-4 py-2 outline-none"
+          className="flex-1 md:w-20 w-10 border rounded-full px-4 py-2 outline-none"
         />
         <button
           onMouseDown={startRecording}
           onMouseUp={stopRecording}
           onMouseLeave={stopRecording}
-          className="bg-gray-200 px-3 py-2 rounded-full"
+          className={`bg-gray-300 px-3 py-2 rounded-full transition-all duration-200
+          ${isRecording ? "-translate-y-5 scale-110 bg-red-400" : ""}`}
         >
           <FaMicrophone />
         </button>
@@ -432,6 +437,7 @@ const ChatPage = () => {
         >
           Send
         </button>
+
       </div>
     </>
   );
