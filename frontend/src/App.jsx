@@ -10,20 +10,17 @@ import { getFCMToken, messaging } from "./notification/firebase";
 import { useEffect } from "react";
 
 function App() {
-  // useEffect(() => {
-  //   getFCMToken();
-
-  //   const unsubscribe = onMessage(messaging, (payload) => {
-  //     console.log("Foreground message:", payload);
-  //     new Notification(payload.data.title, {
-  //       body: payload.data.body,
-  //     });
-  //   });
-  //   return () => unsubscribe();
-  // }, []);
   useEffect(() => {
     getFCMToken();
+    const unsubscribe = onMessage(messaging, (payload) => {
+      console.log("Foreground message:", payload);
+      new Notification(payload.data.title, {
+        body: payload.data.body,
+      });
+    });
+    return () => unsubscribe();
   }, []);
+
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/signup" replace />} />
