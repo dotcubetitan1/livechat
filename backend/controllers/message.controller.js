@@ -35,6 +35,7 @@ export const getMessagesByUserId = async (req, res) => {
 };
 
 export const sendMessage = async (req, res) => {
+    console.log("🔥 API called:", new Date().toISOString());
   try {
     const { text, lat, lng } = req.body;
     const { id: receiverId } = req.params;
@@ -76,6 +77,7 @@ export const sendMessage = async (req, res) => {
     const receiverSocketId = getReceiverSocketId(receiverId);
 
     const receiver = await User.findById(receiverId)
+    const sender = await User.findById(senderId)
 
     const imageCount = imageUrl.length;
     const videoCount = videoUrl.length;
@@ -98,10 +100,9 @@ export const sendMessage = async (req, res) => {
       }
     }
     if (receiver?.fcmToken && !receiverSocketId) {
-      console.log("0000000000")
       await sendPushNotification(
         receiver.fcmToken,
-        req.user.fullName,
+        sender.fullName,
         notificationText,
         {
           imageCount,
@@ -116,8 +117,11 @@ export const sendMessage = async (req, res) => {
       console.log("Message sent to receiver via socket");
       io.to(receiverSocketId).emit("newMessage", newMessage);
     }
-    io.to(senderId.toString()).emit("newMessage", newMessage);
-
+    const senderSocketId = getReceiverSocketId(senderId.toString());
+    if (senderSocketId) {
+      io.to(senderSocketId).emit("newMessage", newMessage);
+    }
+    
     res.status(201).json(newMessage);
   } catch (error) {
     console.error("Error in sendMessage:", error);

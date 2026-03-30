@@ -104,3 +104,14 @@ export const updateFCMToken = async (req, res) => {
     res.status(500).json({ message: "failed to update fcm token" });
   }
 };
+export const logoutUser = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    await User.findByIdAndUpdate(userId, {
+      fcmToken: null,
+    });
+    res.status(200).json({ message: "Logout successful" });
+  } catch (error) {
+    res.status(500).json({ message: "Logout failed" })
+  }
+}

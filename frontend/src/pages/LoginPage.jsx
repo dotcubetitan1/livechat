@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { API_BASE_URL } from "../api/config.js";
-import getFCMToken from "../utils/getFcmToken.js"
+import { getFCMToken } from "../notification/firebase.js"
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -29,7 +29,7 @@ const LoginPage = () => {
       localStorage.setItem("user", JSON.stringify(res.data.data.user));
 
       const token = res.data.data.token;
-      
+
       const fcmToken = await getFCMToken()
       console.log(fcmToken);
       if (fcmToken) {
@@ -40,6 +40,9 @@ const LoginPage = () => {
             }
           }
         )
+      } else if (err) {
+        console.log("fcm error", err);
+
       }
 
       navigate("/chat");

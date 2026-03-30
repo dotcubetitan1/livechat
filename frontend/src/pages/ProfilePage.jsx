@@ -24,7 +24,18 @@ const ProfilePage = () => {
       console.log(error.response?.data || error.message);
     }
   };
-
+const handleLogout = async()=>{
+  try {
+    const res = await axios.post(`${API_BASE_URL}/logout`,{},{
+      headers:{Authorization:`Bearer ${token}`}
+    })
+    console.log(res)
+    localStorage.clear();
+    window.location.href = "/login"
+  } catch (error) {
+    console.log(error.message);
+  }
+}
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -122,6 +133,16 @@ const ProfilePage = () => {
                   {updating ? "Updating..." : "Update Profile"}
                 </button>
               </div>
+
+              <div className="text-center pt-2">
+                <button
+                  onClick={handleLogout}
+                  className="px-6 bg-green-500 text-white py-2 rounded-lg font-semibold hover:bg-green-600 transition disabled:opacity-50"
+                >
+                Logout
+                </button>
+              </div>
+
             </form>
 
           </div>

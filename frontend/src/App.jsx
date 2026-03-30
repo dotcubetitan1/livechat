@@ -5,13 +5,21 @@ import ChatPage from "./pages/ChatPage";
 import DashboardPage from "./pages/DashboardPage";
 import MainLayout from "./MainLayout";
 import ProfilePage from "./pages/ProfilePage";
-import { setupForegroundNotification } from "./utils/notification";
+import { onMessage } from "firebase/messaging";
+import { getFCMToken, messaging } from "./notification/firebase";
 import { useEffect } from "react";
 
 function App() {
   useEffect(() => {
-    Notification.requestPermission();
-    setupForegroundNotification();
+    getFCMToken();
+
+    const unsubscribe = onMessage(messaging, (payload) => {
+      console.log("Foreground message:", payload);
+      new Notification(payload.data.title, {
+        body: payload.data.body,
+      });
+    });
+    return () => unsubscribe();
   }, []);
   return (
     <Routes>

@@ -15,7 +15,8 @@ const ChatPage = () => {
   const [preview, setPreview] = useState(null);
   const [locationLoading, setLocationLoading] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
-  const [isRecording, setIsRecording] = useState(false)
+  const [isRecording, setIsRecording] = useState(false);
+  const [sending, setSending] = useState(false)
 
   const fileInputRef = useRef(null);
   const bottomRef = useRef(null);
@@ -85,7 +86,9 @@ const ChatPage = () => {
     }
   };
   const handleSend = async () => {
+    if (sending) return;
     if (!text.trim() && images.length === 0) return;
+    setSending(true);
     try {
       const formData = new FormData();
       formData.append("text", text);
@@ -103,8 +106,10 @@ const ChatPage = () => {
       }
     } catch (error) {
       console.error("Send message error:", error);
+    } finally {
+      setSending(false)
     }
-  };
+  }
   const handleSendLocation = () => {
     if (!navigator.geolocation) {
       alert("Geolocation supported nahi hai is browser mein");
@@ -418,7 +423,11 @@ const ChatPage = () => {
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSend()}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !sending) {
+              handleSend();
+            }
+          }}
           placeholder="Send Message..."
           className="flex-1 md:w-20 w-10 border rounded-full px-4 py-2 outline-none"
         />
@@ -433,9 +442,11 @@ const ChatPage = () => {
         </button>
         <button
           onClick={handleSend}
-          className="bg-green-500 text-white px-4 py-2 rounded-full"
+          disabled={sending}
+          className={`px-4 py-2 rounded-full text-white ${sending ? "bg-gray-400" : "bg-green-500"
+            }`}
         >
-          Send
+          {sending ? "Sending..." : "Send"}
         </button>
 
       </div>
