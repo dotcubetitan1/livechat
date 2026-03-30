@@ -10,10 +10,10 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-messaging.onBackgroundMessage((payload) => {
-  console.log(" Background message:", payload);
+// messaging.onBackgroundMessage((payload) => {
+//   console.log(" Background message:", payload);
 
-  self.registration.showNotification(payload.data.title, {
-    body: payload.data.body,
-  });
-});
+// //   self.registration.showNotification(payload.data.title, {
+// //     body: payload.data.body,
+// //   });
+// });

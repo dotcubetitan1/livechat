@@ -5,17 +5,17 @@ const sendPushNotification = async (token, title, body, media = {}) => {
 
         const message = {
             token,
-            // notification: {
-            //     title,
-            //     body,
-            // },
+            notification: {
+                title,
+                body,
+            },
             data: {
                 type: "chat",
                 imageCount: String(imageCount),
                 videoCount: String(videoCount),
                 audioCount: String(audioCount),
-                title: title,
-                body: body
+                // title: title,
+                // body: body
             },
         };
 
