@@ -10,44 +10,75 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
+// Notification click handler - PEHLE LAGAO
+self.addEventListener("notificationclick", (event) => {
+    console.log("Notification clicked in service worker");
+    console.log("Event:", event);
+    console.log("Notification:", event.notification);
+    console.log("Data:", event.notification.data);
+    event.notification.close();
+
+    const senderId = event.notification.data?.senderId;
+    console.log("Sender ID:", senderId);
+
+    if (senderId) {
+        const url = `/chat/${senderId}`;
+        console.log("Redirecting to:", url);
+
+        event.waitUntil(
+            clients.matchAll({ type: "window", includeUncontrolled: true })
+                .then((clientList) => {
+                    console.log("Found clients:", clientList.length);
+
+                    // Pehle existing client check karo
+                    for (const client of clientList) {
+                        console.log("Client URL:", client.url);
+                        if (client.url.includes("/chat") || client.url.includes("/dashboard")) {
+                            console.log("Focusing existing client");
+                            client.focus();
+                            return client.navigate(url);
+                        }
+                    }
+                    // Koi existing client nahi to naya kholo
+                    console.log("Opening new window");
+                    return clients.openWindow(url);
+                })
+        );
+    } else {
+        console.log("No senderId found in notification");
+    }
+});
+
+// Background message handler
 messaging.onBackgroundMessage((payload) => {
     console.log("Background message received:", payload);
 
-    // Backend se notification object aa raha hai
     const title = payload.notification?.title || payload.data?.title;
     const body = payload.notification?.body || payload.data?.body;
+    const senderId = payload.data?.senderId;
+
+    console.log("Showing notification for:", senderId);
 
     self.registration.showNotification(title, {
         body: body,
         icon: "/back.png",
         badge: "/back.png",
-        tag: "chat-notification",
+        tag: `chat-${senderId}`, // Different tag for different chats
+        renotify: true,
         data: {
-            senderId: payload.data?.senderId,
-            url: `/chat/${payload.data?.senderId}`
+            senderId: senderId,
+            url: `/chat/${senderId}`
         }
     });
 });
-// Notification click handler
-console.log("77777")
-self.addEventListener("notificationclick", (event) => {
-    console.log("88888")
-    event.notification.close();
-    const senderId = event.notification.data?.senderId;
-    console.log("Notification clicked, senderId:", senderId)
-    if (senderId) {
-        const url = `${self.location.origin}/chat/${senderId}`;
-        clients.matchAll({ type: "window", includeUncontrolled: true })
-            .then((clientList) => {
-                // Tab already open hai toh focus karo aur navigate karo
-                for (const client of clientList) {
-                    if ("focus" in client) {
-                        client.focus();
-                        return client.navigate(url);
-                    }
-                }
-                //  Koi tab nahi toh naya kholo
-                return clients.openWindow(url);
-            })
-    }
-})
+
+// Service worker install and activate logs
+self.addEventListener('install', (event) => {
+    console.log("✅ Service Worker installed");
+    self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+    console.log("✅ Service Worker activated");
+    event.waitUntil(clients.claim());
+});
