@@ -13,57 +13,41 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
     console.log("Background message received:", payload);
 
+    // Backend se notification object aa raha hai
     const title = payload.notification?.title || payload.data?.title;
     const body = payload.notification?.body || payload.data?.body;
-    const senderId = payload.data?.senderId;
-    
-    if (!senderId) {
-        console.warn("No senderId in notification payload");
-        return;
-    }
 
-    const notificationOptions = {
+    self.registration.showNotification(title, {
         body: body,
         icon: "/back.png",
         badge: "/back.png",
-        tag: `chat-${senderId}`,
+        tag: "chat-notification",
         data: {
-            senderId: senderId,
-            url: `/chat/${senderId}` // Relative URL is fine
+            senderId: payload.data?.senderId,
+            url: `/chat/${payload.data?.senderId}`
         }
-    };
-
-    self.registration.showNotification(title, notificationOptions);
+    });
 });
-
 // Notification click handler
+console.log("77777")
 self.addEventListener("notificationclick", (event) => {
-    console.log("Notification clicked:", event);
+    console.log("88888")
     event.notification.close();
-    
     const senderId = event.notification.data?.senderId;
-    const relativeUrl = event.notification.data?.url || `/chat/${senderId}`;
-    
-    console.log("Relative URL:", relativeUrl);
-    
-    event.waitUntil(
-        clients.matchAll({ 
-            type: "window", 
-            includeUncontrolled: true 
-        }).then((clientList) => {
-            // Check if there's already a window/tab with our app
-            for (const client of clientList) {
-                if (client.url.includes(self.location.origin) && "focus" in client) {
-                    // Found existing window, focus it and navigate
-                    client.focus();
-                    // Navigate to the specific chat
-                    return client.navigate(relativeUrl);
+    console.log("Notification clicked, senderId:", senderId)
+    if (senderId) {
+        const url = `${self.location.origin}/chat/${senderId}`;
+        clients.matchAll({ type: "window", includeUncontrolled: true })
+            .then((clientList) => {
+                // Tab already open hai toh focus karo aur navigate karo
+                for (const client of clientList) {
+                    if ("focus" in client) {
+                        client.focus();
+                        return client.navigate(url);
+                    }
                 }
-            }
-            // No existing window, open a new one with the full URL
-            const fullUrl = `${self.location.origin}${relativeUrl}`;
-            console.log("Opening new window with URL:", fullUrl);
-            return clients.openWindow(fullUrl);
-        })
-    );
-});
+                //  Koi tab nahi toh naya kholo
+                return clients.openWindow(url);
+            })
+    }
+})

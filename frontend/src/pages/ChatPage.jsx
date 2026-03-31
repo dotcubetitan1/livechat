@@ -35,13 +35,6 @@ const ChatPage = () => {
   }, [userId]);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      navigate("/login");
-    }
-  }, [navigate]);
-  
-  useEffect(() => {
     console.log("socket inside effect:", socketRef?.current)
     if (!socketRef?.current) return;
     socketRef.current.on("newMessage", (msg) => {
