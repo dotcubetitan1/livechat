@@ -7,11 +7,8 @@ const userSocketMap = {}; // { userId: socketId }
 export const initSocket = (server) => {
   io = new Server(server, {
     cors: {
-      origin: [
-        "http://localhost:5173",
-        "https://livechat-frontend-zpcx.onrender.com", // ✅ Your deployed frontend
-      ],
-      credentials: true,
+      origin: "*",
+      credentials: false, 
     },
   });
 
