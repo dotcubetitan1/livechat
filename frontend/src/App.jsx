@@ -14,9 +14,17 @@ function App() {
     getFCMToken();
     const unsubscribe = onMessage(messaging, (payload) => {
       console.log("Foreground message:", payload);
-      new Notification(payload.data.title, {
-        body: payload.data.body,
-      });
+
+      const title = payload.notification?.title || payload.data?.title;
+      const body = payload.notification?.body || payload.data?.body;
+
+      navigator.serviceWorker.ready.then((registration) => {
+        registration.showNotification(title, {
+          body,
+          icon: "/logo192.png",
+          tag: "chat-notification",
+        })
+      })
     });
     return () => unsubscribe();
   }, []);

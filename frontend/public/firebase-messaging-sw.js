@@ -10,10 +10,18 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// messaging.onBackgroundMessage((payload) => {
-//   console.log(" Background message:", payload);
+messaging.onBackgroundMessage((payload) => {
+    console.log("Background message received:", payload);
+    
+    // Backend se notification object aa raha hai
+    const title = payload.notification?.title || payload.data?.title;
+    const body = payload.notification?.body || payload.data?.body;
 
-// //   self.registration.showNotification(payload.data.title, {
-// //     body: payload.data.body,
-// //   });
-// });
+    self.registration.showNotification(title, {
+        body: body,
+        icon: "/logo192.png", // apna icon path dalo
+        badge: "/badge.png",
+        tag: "chat-notification", // same tag = replace old notification
+        data: payload.data,
+    });
+});

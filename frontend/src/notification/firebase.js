@@ -15,16 +15,24 @@ const app = initializeApp(firebaseConfig);
 export const messaging = getMessaging(app)
 
 export const getFCMToken = async () => {
-    const permission = await Notification.requestPermission();
-    const registration = await navigator.serviceWorker.register(
-        "/firebase-messaging-sw.js"
-    );
-    if (permission === "granted") {
+    try {
+        const permission = await Notification.requestPermission();
+        if (permission !== "granted") {
+            console.warn("Notification permission denied");
+            return null;
+        }
+        // Ek hi jagah register karo
+        const registration = await navigator.serviceWorker.register(
+            "/firebase-messaging-sw.js"
+        );
+        await navigator.serviceWorker.ready;
         const token = await getToken(messaging, {
             vapidKey: "BH5ZiwyfYvtQCsrCcDhiwYtiBY9jsWh6nCwhu7pckrcGv9FjvSbarMD1aOQWyBs8Fdz5jzwTA5ZZWa1wty8Vrrk",
             serviceWorkerRegistration: registration,
         });
-        console.log("fcm token :", token);
-        return token;
+        return token || null
+    } catch (error) {
+        console.error("FCM Token error:", err);
+        return null;
     }
 } 

@@ -11,11 +11,21 @@ const sendPushNotification = async (token, title, body, media = {}) => {
             },
             data: {
                 type: "chat",
+                title: title, //service worker fallback ke liye
+                body: body,   //service worker fallback ke liye
                 imageCount: String(imageCount),
                 videoCount: String(videoCount),
                 audioCount: String(audioCount),
-                // title: title,
-                // body: body
+            },
+            webpush: {
+                headers: {
+                    Urgency: "high",
+                },
+                notification: {
+                    title,
+                    body,
+                    icon: "/logo192.png",
+                },
             },
         };
 

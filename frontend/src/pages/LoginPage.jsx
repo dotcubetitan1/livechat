@@ -31,7 +31,7 @@ const LoginPage = () => {
       const token = res.data.data.token;
 
       const fcmToken = await getFCMToken()
-      console.log(fcmToken);
+      console.log("login fcm token",fcmToken);
       if (fcmToken) {
         await axios.post(`${API_BASE_URL}/update-fcm-token`, { fcmToken },
           {

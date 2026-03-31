@@ -99,7 +99,7 @@ export const sendMessage = async (req, res) => {
         notificationText = parts.join(", ")
       }
     }
-    if (receiver?.fcmToken && !receiverSocketId) {
+    if (receiver?.fcmToken) {
       await sendPushNotification(
         receiver.fcmToken,
         sender.fullName,

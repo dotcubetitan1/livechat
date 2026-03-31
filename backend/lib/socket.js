@@ -9,7 +9,7 @@ export const initSocket = (server) => {
     cors: {
       origin: [
         "http://localhost:5173",
-        "https://livechat-1-fcqq.onrender.com", // ✅ Your deployed frontend
+        "https://livechat-frontend-zpcx.onrender.com", // ✅ Your deployed frontend
       ],
       credentials: true,
     },
