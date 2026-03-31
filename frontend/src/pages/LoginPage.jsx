@@ -25,13 +25,14 @@ const LoginPage = () => {
         password: formData.password,
       });
       console.log("login response", res.data);
+
+      const token = res.data.data.token;
       localStorage.setItem("token", res.data.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.data.user));
 
-      const token = res.data.data.token;
 
       const fcmToken = await getFCMToken()
-      console.log("login fcm token",fcmToken);
+      console.log("FCM Token", fcmToken);
       if (fcmToken) {
         await axios.post(`${API_BASE_URL}/update-fcm-token`, { fcmToken },
           {
@@ -39,7 +40,8 @@ const LoginPage = () => {
               Authorization: `Bearer ${token}`
             }
           }
-        )
+        );
+        console.log("FCM token saved");
       } else if (err) {
         console.log("fcm error", err);
 
