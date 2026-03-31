@@ -1,7 +1,7 @@
 import admin from "../config/firebase.js"
 const sendPushNotification = async (token, title, body, media = {}) => {
     try {
-        const { imageCount, videoCount, audioCount } = media;
+        const { imageCount, videoCount, audioCount, senderId } = media;
 
         const message = {
             token,
@@ -13,9 +13,10 @@ const sendPushNotification = async (token, title, body, media = {}) => {
                 type: "chat",
                 title: title, //service worker fallback ke liye
                 body: body,   //service worker fallback ke liye
-                imageCount: String(imageCount),
-                videoCount: String(videoCount),
-                audioCount: String(audioCount),
+                imageCount: String(imageCount || 0),
+                videoCount: String(videoCount || 0),
+                audioCount: String(audioCount || 0),
+                senderId: String(senderId || "")
             },
             webpush: {
                 headers: {
@@ -23,14 +24,13 @@ const sendPushNotification = async (token, title, body, media = {}) => {
                 },
                 notification: {
                     title,
-                    body,
-                    icon: "/logo192.png",
+                    body
                 },
             },
         };
 
         const response = await admin.messaging().send(message);
-        console.log("✅ Notification sent:", response);
+        console.log("Notification sent:", response);
 
     } catch (error) {
         console.error("Push failed:", error);

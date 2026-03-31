@@ -35,7 +35,6 @@ export const getMessagesByUserId = async (req, res) => {
 };
 
 export const sendMessage = async (req, res) => {
-  console.log("🔥 API called:", new Date().toISOString());
   try {
     const { text, lat, lng } = req.body;
     const { id: receiverId } = req.params;
@@ -99,14 +98,16 @@ export const sendMessage = async (req, res) => {
         notificationText = parts.join(", ")
       }
     }
-    console.log("Receiver FCM Token:", receiver?.fcmToken);
-    console.log("Receiver Socket ID:", receiverSocketId);
+    // console.log("Receiver FCM Token:", receiver?.fcmToken);
+    // console.log("Receiver Socket ID:", receiverSocketId);
+
     if (receiver?.fcmToken) {
       await sendPushNotification(
         receiver.fcmToken,
         sender.fullName,
         notificationText,
         {
+          senderId:senderId.toString(),
           imageCount,
           videoCount,
           audioCount,

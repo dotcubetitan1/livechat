@@ -23,8 +23,10 @@ export const getFCMToken = async () => {
         }
         // Ek hi jagah register karo
         const registration = await navigator.serviceWorker.register(
-            "/firebase-messaging-sw.js"
+            "/firebase-messaging-sw.js",
+            { updateViaCache: "none" }
         );
+        await registration.update();
         await navigator.serviceWorker.ready;
         const token = await getToken(messaging, {
             vapidKey: "BH5ZiwyfYvtQCsrCcDhiwYtiBY9jsWh6nCwhu7pckrcGv9FjvSbarMD1aOQWyBs8Fdz5jzwTA5ZZWa1wty8Vrrk",

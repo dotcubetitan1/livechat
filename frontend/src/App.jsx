@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import SignUpPage from "./pages/SignUpPage";
 import LoginPage from "./pages/LoginPage";
 import ChatPage from "./pages/ChatPage";
@@ -8,7 +8,7 @@ import ProfilePage from "./pages/ProfilePage";
 import { onMessage } from "firebase/messaging";
 import { getFCMToken, messaging } from "./notification/firebase";
 import { useEffect } from "react";
-
+;
 function App() {
   useEffect(() => {
     getFCMToken();
@@ -17,12 +17,17 @@ function App() {
 
       const title = payload.notification?.title || payload.data?.title;
       const body = payload.notification?.body || payload.data?.body;
-
+      const senderId = payload.data?.senderId;
+      
       navigator.serviceWorker.ready.then((registration) => {
         registration.showNotification(title, {
           body,
-          icon: "/logo192.png",
+          icon: "/for.webp",
           tag: "chat-notification",
+          data: {
+            senderId: senderId,
+            url: `/chat/${senderId}`
+          }
         })
       })
     });
