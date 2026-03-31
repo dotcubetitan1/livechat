@@ -1,6 +1,5 @@
-import { initializeApp } from "firebase/app"
-import { getMessaging, getToken } from "firebase/messaging";
-
+import { initializeApp } from "firebase/app";
+import { getMessaging, getToken, onMessage } from "firebase/messaging";
 
 const firebaseConfig = {
     apiKey: "AIzaSyAf8sMsqFSy8vQ-ScIvUiyO2DkOLmZikko",
@@ -11,8 +10,9 @@ const firebaseConfig = {
     appId: "1:760427615893:web:aca876a869f5e6c8e66d9c",
     measurementId: "G-CPQ7Q48RX3",
 };
+
 const app = initializeApp(firebaseConfig);
-export const messaging = getMessaging(app)
+export const messaging = getMessaging(app);
 
 export const getFCMToken = async () => {
     try {
@@ -21,20 +21,37 @@ export const getFCMToken = async () => {
             console.warn("Notification permission denied");
             return null;
         }
-        // Ek hi jagah register karo
+
+        // Unregister any existing service workers first
+        const existingRegistrations = await navigator.serviceWorker.getRegistrations();
+        for (const registration of existingRegistrations) {
+            if (registration.active && registration.active.scriptURL.includes('firebase-messaging-sw')) {
+                await registration.unregister();
+                console.log("Unregistered existing service worker");
+            }
+        }
+
+        // Register service worker with correct scope
         const registration = await navigator.serviceWorker.register(
             "/firebase-messaging-sw.js",
-            { updateViaCache: "none" }
+            { 
+                scope: "/",
+                updateViaCache: "none" 
+            }
         );
-        await registration.update();
+        
+        console.log("Service Worker registered with scope:", registration.scope);
         await navigator.serviceWorker.ready;
+        
         const token = await getToken(messaging, {
             vapidKey: "BH5ZiwyfYvtQCsrCcDhiwYtiBY9jsWh6nCwhu7pckrcGv9FjvSbarMD1aOQWyBs8Fdz5jzwTA5ZZWa1wty8Vrrk",
             serviceWorkerRegistration: registration,
         });
-        return token || null
+
+        console.log("FCM Token obtained:", token);
+        return token;
     } catch (error) {
         console.error("FCM Token error:", error);
         return null;
     }
-} 
+};
