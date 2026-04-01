@@ -50,17 +50,12 @@ self.addEventListener("notificationclick", (event) => {
 
 // Background message handler
 messaging.onBackgroundMessage((payload) => {
-    // if (payload.notification) return;
+
     console.log("Background message received:", payload);
 
     const title = payload.data?.title;
     const body = payload.data?.body;
     const senderId = payload.data?.senderId;
-
-    self.registration.getNotifications({ tag: `chat-${senderId}` })
-        .then(existingNotifications => {
-            existingNotifications.forEach(n => n.close());
-        });
 
     self.registration.showNotification(title, {
         body: body,
