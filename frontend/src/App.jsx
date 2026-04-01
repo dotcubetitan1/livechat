@@ -11,19 +11,19 @@ import { useEffect } from "react";
 ;
 function App() {
   useEffect(() => {
-    // Get token
     getFCMToken();
 
-    // Foreground message handler
     const unsubscribe = onMessage(messaging, (payload) => {
-      console.log("📱 Foreground message:", payload);
+      console.log("Foreground message:", payload);
 
       const title = payload.data?.title;
       const body = payload.data?.body;
       const senderId = payload.data?.senderId;
 
-      console.log("Showing foreground notification from:", senderId);
-
+      const currentPath = window.location.pathname;
+      const isAlreadyInChat = currentPath === `/chat/${senderId}`;
+        if (isAlreadyInChat) return;
+        
       // Foreground mein bhi notification dikhao
       if (Notification.permission === "granted") {
         const notification = new Notification(title, {
@@ -35,9 +35,8 @@ function App() {
           }
         });
 
-        // Foreground notification click handler
         notification.onclick = (event) => {
-          console.log("🔔 Foreground notification clicked");
+          console.log("Foreground notification clicked");
           event.preventDefault();
           notification.close();
           window.location.href = `/chat/${senderId}`;
@@ -47,7 +46,7 @@ function App() {
 
     return () => unsubscribe();
   }, []);
-  
+
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/signup" replace />} />

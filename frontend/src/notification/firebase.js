@@ -21,47 +21,26 @@ export const getFCMToken = async () => {
             console.warn("Notification permission denied");
             return null;
         }
-        
-        // Pehle purani service worker unregister karo
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        for (const registration of registrations) {
-            if (registration.active && registration.active.scriptURL.includes('firebase-messaging-sw')) {
-                await registration.unregister();
-                console.log("Old service worker unregistered");
-            }
+
+        let registration = await navigator.serviceWorker.getRegistration("/");
+        if (!registration) {
+            registration = await navigator.serviceWorker.register(
+                "/firebase-messaging-sw.js",
+                {
+                    scope: "/",
+                    updateViaCache: "none"
+                }
+            );
         }
-        
-        // Naya service worker register karo with proper scope
-        const registration = await navigator.serviceWorker.register(
-            "/firebase-messaging-sw.js",
-            { 
-                scope: "/",
-                updateViaCache: "none" 
-            }
-        );
-        
-        console.log("Service Worker registered:", registration);
-        console.log("SW Active:", registration.active);
-        console.log("SW Scope:", registration.scope);
-        
         await navigator.serviceWorker.ready;
-        
+
         const token = await getToken(messaging, {
             vapidKey: "BH5ZiwyfYvtQCsrCcDhiwYtiBY9jsWh6nCwhu7pckrcGv9FjvSbarMD1aOQWyBs8Fdz5jzwTA5ZZWa1wty8Vrrk",
             serviceWorkerRegistration: registration,
         });
-        
+
         console.log("FCM Token obtained:", token);
-        
-        // // Test notification send karo
-        // setTimeout(() => {
-        //     registration.showNotification("Test Notification", {
-        //         body: "Service worker is working!",
-        //         icon: "/back.png",
-        //         data: { test: true }
-        //     });
-        // }, 2000);
-        
+
         return token || null;
     } catch (error) {
         console.error("FCM Token error:", error);
