@@ -57,7 +57,10 @@ messaging.onBackgroundMessage((payload) => {
     const body = payload.data?.body;
     const senderId = payload.data?.senderId;
 
-    console.log("Showing notification for:", senderId);
+    self.registration.getNotifications({ tag: `chat-${senderId}` })
+        .then(existingNotifications => {
+            existingNotifications.forEach(n => n.close());
+        });
 
     self.registration.showNotification(title, {
         body: body,
