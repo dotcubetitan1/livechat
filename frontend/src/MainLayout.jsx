@@ -14,7 +14,7 @@ const MainLayout = () => {
   const location = useLocation();
   const token = localStorage.getItem("token");
 
-  const isChatPage = location.pathname.includes("/chat/");
+  const isChatPage = location.pathname.match(/^\/chat\/.+/);;
   const isSubPage = location.pathname.includes("/profile") ||
     location.pathname.includes("/dashboard");
 

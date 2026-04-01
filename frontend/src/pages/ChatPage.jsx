@@ -59,7 +59,6 @@ const ChatPage = () => {
       bottomRef.current.scrollIntoView({ behavior: "auto" });
       isFirstLoad.current = false;
     } else {
-      // New messages → smooth scroll
       bottomRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);

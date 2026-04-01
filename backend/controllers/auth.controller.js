@@ -33,7 +33,7 @@ export const login = async (req, res) => {
     if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
     if (user.password !== password)
-      return res.status(400).json({ message: "password is increat" });
+      return res.status(400).json({ message: "password is increate" });
     const token = jwt.sign(
       { userId: user._id, fullName: user.fullName, email: email },
       process.env.JWT_SECRET,
@@ -44,7 +44,8 @@ export const login = async (req, res) => {
       data: { token, user },
     });
   } catch (error) {
-    res.status(500).json({ message: "Login failed" });
+    console.log("login error", error);
+    res.status(500).json({ message: error.message });
   }
 };
 export const getProfile = async (req, res) => {

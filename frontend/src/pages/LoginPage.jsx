@@ -6,6 +6,7 @@ import { getFCMToken } from "../notification/firebase.js"
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -20,6 +21,7 @@ const LoginPage = () => {
   };
   const handleLogin = async () => {
     try {
+      setLoading(true)
       const res = await axios.post(`${API_BASE_URL}/login`, {
         email: formData.email,
         password: formData.password,
@@ -50,7 +52,8 @@ const LoginPage = () => {
       navigate("/chat");
 
     } catch (error) {
-      console.log(error.response?.data || error.message);
+      console.log(error.message);
+      setLoading(false)
     }
   };
 
@@ -87,9 +90,14 @@ const LoginPage = () => {
             <div className="text-center">
               <button
                 onClick={handleLogin}
-                className="bg-blue-400 px-6 py-1 rounded-full text-white"
+                disabled={loading}
+                className="bg-blue-400 px-6 py-1 rounded-full text-white flex items-center gap-2 mx-auto disabled:opacity-70"
               >
-                Login
+                {loading ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : "Login"
+                }
+
               </button>
             </div>
 
