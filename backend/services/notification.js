@@ -10,14 +10,14 @@ const sendPushNotification = async (token, title, body, media = {}) => {
         }
         const message = {
             token,
-            notification: {
-                title,
-                body,
-            },
+            // notification: {
+            //     title,
+            //     body,
+            // },
             data: {
                 type: "chat",
-                title: title, //service worker fallback ke liye
-                body: body,   //service worker fallback ke liye
+                title: title, 
+                body: body,   
                 imageCount: String(imageCount || 0),
                 videoCount: String(videoCount || 0),
                 audioCount: String(audioCount || 0),
@@ -27,10 +27,10 @@ const sendPushNotification = async (token, title, body, media = {}) => {
                 headers: {
                     Urgency: "high",
                 },
-                notification: {
-                    title,
-                    body
-                },
+                // notification: {
+                //     title,
+                //     body
+                // },
             },
         };
 

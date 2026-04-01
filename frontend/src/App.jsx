@@ -18,8 +18,8 @@ function App() {
     const unsubscribe = onMessage(messaging, (payload) => {
       console.log("📱 Foreground message:", payload);
 
-      const title = payload.notification?.title || payload.data?.title;
-      const body = payload.notification?.body || payload.data?.body;
+      const title = payload.data?.title;
+      const body = payload.data?.body;
       const senderId = payload.data?.senderId;
 
       console.log("Showing foreground notification from:", senderId);
@@ -47,6 +47,7 @@ function App() {
 
     return () => unsubscribe();
   }, []);
+  
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/signup" replace />} />

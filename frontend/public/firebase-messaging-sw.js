@@ -53,8 +53,8 @@ self.addEventListener("notificationclick", (event) => {
 messaging.onBackgroundMessage((payload) => {
     console.log("Background message received:", payload);
 
-    const title = payload.notification?.title || payload.data?.title;
-    const body = payload.notification?.body || payload.data?.body;
+    const title = payload.data?.title;
+    const body = payload.data?.body;
     const senderId = payload.data?.senderId;
 
     console.log("Showing notification for:", senderId);
