@@ -28,7 +28,7 @@ export const getFCMToken = async () => {
                 "/firebase-messaging-sw.js",
                 {
                     scope: "/",
-                    updateViaCache: "none"
+                    // updateViaCache: "none"
                 }
             );
         }
