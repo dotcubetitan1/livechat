@@ -98,8 +98,6 @@ export const sendMessage = async (req, res) => {
         notificationText = parts.join(", ")
       }
     }
-    // console.log("Receiver FCM Token:", receiver?.fcmToken);
-    // console.log("Receiver Socket ID:", receiverSocketId);
 
     if (receiver?.fcmToken) {
       await sendPushNotification(

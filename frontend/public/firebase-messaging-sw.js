@@ -39,7 +39,6 @@ self.addEventListener("notificationclick", (event) => {
                             return client.navigate(url);
                         }
                     }
-                    // Koi existing client nahi to naya kholo
                     console.log("Opening new window");
                     return clients.openWindow(url);
                 })
@@ -51,6 +50,7 @@ self.addEventListener("notificationclick", (event) => {
 
 // Background message handler
 messaging.onBackgroundMessage((payload) => {
+    // if (payload.notification) return;
     console.log("Background message received:", payload);
 
     const title = payload.data?.title;
@@ -63,8 +63,8 @@ messaging.onBackgroundMessage((payload) => {
         body: body,
         icon: "/back.png",
         badge: "/back.png",
-        tag: `chat-${senderId}`, // Different tag for different chats
-        renotify: true,
+        tag: `chat-${senderId}`,
+        renotify: false,
         data: {
             senderId: senderId,
             url: `/chat/${senderId}`
@@ -72,13 +72,12 @@ messaging.onBackgroundMessage((payload) => {
     });
 });
 
-// Service worker install and activate logs
 self.addEventListener('install', (event) => {
-    console.log("✅ Service Worker installed");
+    console.log("SW installed");
     self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-    console.log("✅ Service Worker activated");
+    console.log("SW activated");
     event.waitUntil(clients.claim());
 });
