@@ -191,88 +191,50 @@ const ChatPage = () => {
     <>
 
       {/* Header */}
-      <div className="px-4 py-3 border-b flex items-center gap-2 bg-white">
-        {/* Mobile Back Button */}
-        <button
-          onClick={() => navigate("/chat")}
-          className="md:hidden text-2xl"
-        >
-          ←
-        </button>
-        <div className="w-9 h-9 rounded-full bg-green-600 text-white flex items-center justify-center font-semibold">
+      <div className="px-4 py-3 bg-[#075E54] flex items-center gap-3">
+        <button onClick={() => navigate("/chat")} className="md:hidden text-white text-xl mr-1">←</button>
+        <div className="w-9 h-9 rounded-full bg-white/20 text-white flex items-center justify-center font-medium text-sm flex-shrink-0">
           {selectedUser.fullName?.charAt(0)}
         </div>
-        <p className="font-semibold">{selectedUser.fullName}</p>
+        <div>
+          <p className="text-white font-medium text-sm">{selectedUser.fullName}</p>
+          <p className="text-white/70 text-xs">Online</p>
+        </div>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 bg-gray-50">
+      {/* Messages area */}
+      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-1 bg-[#ECE5DD]">
         {messages.map((msg) => {
           const isMe = msg.senderId?.toString() === user._id.toString();
           return (
-            <div
-              key={msg._id}
-              className={`flex ${isMe ? "justify-end" : "justify-start"}`}
-            >
-              <div>
-                {msg.text && (
-                  <div className="bg-green-200 px-3 py-2 rounded-xl text-sm inline-block">
-                    {msg.text}
-                  </div>
-                )}
-
+            <div key={msg._id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+              <div className={`max-w-[75%] px-3 py-2 rounded-lg text-sm shadow-sm
+          ${isMe ? "bg-[#DCF8C6] rounded-br-none" : "bg-white rounded-bl-none"}`}>
+                {msg.text && <p className="text-gray-800">{msg.text}</p>}
                 {msg.images?.map((img, i) => (
-                  <img
-                    key={i}
-                    src={img}
-                    alt="chat"
-                    onClick={() => setPreview({ type: "image", url: img })}
-                    className="w-40 h-40 object-cover rounded-lg mt-2 cursor-pointer"
-                  />
+                  <img key={i} src={img} onClick={() => setPreview({ type: "image", url: img })}
+                    className="w-40 h-40 object-cover rounded-lg mt-1 cursor-pointer" />
                 ))}
                 {msg.videos?.map((video, i) => (
-                  <video
-                    key={i}
-                    src={video}
-                    onClick={() => setPreview({ type: "video", url: video })}
-                    className="w-40 h-40 object-cover rounded-lg mt-2 cursor-pointer"
-                  />
+                  <video key={i} src={video} onClick={() => setPreview({ type: "video", url: video })}
+                    className="w-40 h-40 object-cover rounded-lg mt-1 cursor-pointer" />
                 ))}
                 {msg.audios?.map((audio, i) => (
-                  <audio
-                    key={i}
-                    controls
-                    className="mt-2"
-                  >
-                    <source src={audio} />
-                  </audio>
+                  <audio key={i} controls className="mt-1 w-48"><source src={audio} /></audio>
                 ))}
                 {msg.location && (
-                  <a
-                    href={`https://www.google.com/maps?q=${msg.location.lat},${msg.location.lng}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="block mt-2 rounded-lg overflow-hidden w-full max-w-xs"
-                  >
-                    {/* Map Preview Box */}
-                    <div
-                      className="relative w-full h-36 rounded-lg overflow-hidden border border-gray-200 shadow-sm"
-                      style={{
-                        backgroundImage: `url(https://tile.openstreetmap.org/15/${Math.floor((msg.location.lng + 180) / 360 * Math.pow(2, 15))}/${Math.floor((1 - Math.log(Math.tan(msg.location.lat * Math.PI / 180) + 1 / Math.cos(msg.location.lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, 15))}.png)`,
-                        backgroundSize: "cover",
-                        backgroundPosition: "center",
-                      }}
-                    >
-                      {/* Pin Icon */}
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-3xl drop-shadow-lg">📍</span>
-                      </div>
+                  <a href={`https://www.google.com/maps?q=${msg.location.lat},${msg.location.lng}`}
+                    target="_blank" rel="noreferrer"
+                    className="block mt-1 rounded-lg overflow-hidden w-48">
+                    <div className="relative h-28 bg-green-100 rounded-lg border border-gray-200 flex items-center justify-center">
+                      <span className="text-2xl">📍</span>
                     </div>
-                    <span className="text-blue-600 text-sm mt-1 block text-center">
-                      📍 View on Google Maps
-                    </span>
+                    <span className="text-blue-500 text-xs mt-1 block text-center">View on Google Maps</span>
                   </a>
                 )}
+                <p className={`text-[10px] mt-1 text-right ${isMe ? "text-green-600" : "text-gray-400"}`}>
+                  {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                </p>
               </div>
             </div>
           );
@@ -359,95 +321,51 @@ const ChatPage = () => {
           ))}
         </div>
       )}
-      {/* Input */}
-      <div className="p-1 border-t flex gap-2 bg-white relative">
 
-        <div >
-          <button onClick={() => setShowMenu((prev) => !prev)} className="text-xl px-2 py-1 rounded-full transition font-bold text-gray-800 mt-2 ">
-            <GrGallery />
-          </button>
-        </div>
-        {/* Dropdown Menu */}
-        {
-          showMenu && (
-            <div className="absolute bottom-15 left-3 bg-white border border-gray-200 rounded-xl shadow-lg w-44 z-50 overflow-hidden">
-              {/* Image */}
-              <button
-                onClick={() => {
-                  fileInputRef.current.accept = "image/*";
-                  fileInputRef.current.click();
-                  setShowMenu(false);
-                }}
-                className="flex items-center gap-3 w-full px-4 py-3 hover:bg-gray-50 text-sm text-gray-700"
-              >
-                🖼️ Image
-              </button>
-              <button
-                onClick={() => {
-                  fileInputRef.current.accept = "video/*";
-                  fileInputRef.current.click();
-                  setShowMenu(false);
-                }}
-                className="flex items-center gap-3 w-full px-4 py-3 hover:bg-gray-50 text-sm text-gray-700"
-              >
-                🎥 Video
-
-              </button>
-
-              {/* Audio */}
-              <button
-                onClick={() => {
-                  fileInputRef.current.accept = "audio/*";
-                  fileInputRef.current.click();
-                  setShowMenu(false);
-                }}
-                className="flex items-center gap-3 w-full px-4 py-3 hover:bg-gray-50 text-sm text-gray-700 border-t"
-              >
-                🎵 Audio
-              </button>
-              {/* Location */}
-              <button
-                onClick={() => {
-                  handleSendLocation();
-                  setShowMenu(false);
-                }}
-                disabled={locationLoading}
-                className="flex items-center gap-3 w-full px-4 py-3 hover:bg-gray-50 text-sm text-gray-700 border-t disabled:opacity-50"
-              >
-                {locationLoading ? "⏳" : "📍"} Location
-              </button>
-            </div>
-          )
-        }
-        <input
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !sending) {
-              handleSend();
-            }
-          }}
-          placeholder="Send Message..."
-          className="flex-1 md:w-20 w-10 border rounded-full px-4 py-2 outline-none"
-        />
-        <button
-          onMouseDown={startRecording}
-          onMouseUp={stopRecording}
-          onMouseLeave={stopRecording}
-          className={`bg-gray-300 px-3 py-2 rounded-full transition-all duration-200
-          ${isRecording ? "-translate-y-5 scale-110 bg-red-400" : ""}`}
-        >
-          <FaMicrophone />
-        </button>
-        <button
-          onClick={handleSend}
-          disabled={sending}
-          className={`px-4 py-2 rounded-full text-white ${sending ? "bg-gray-400" : "bg-green-500"
-            }`}
-        >
-          {sending ? "Sending..." : "Send"}
+      {/* Input bar */}
+      <div className="bg-[#F0F0F0] px-2 py-2 flex items-center gap-2 border-t border-gray-200">
+        <button onClick={() => setShowMenu(p => !p)}
+          className="w-10 h-10 flex items-center justify-center text-gray-500 rounded-full hover:bg-gray-200">
+          <GrGallery className="text-xl" />
         </button>
 
+        {showMenu && (
+          <div className="absolute bottom-16 left-3 md:left-72 bg-white border border-gray-200 rounded-2xl shadow-xl w-44 z-50 overflow-hidden">
+            <button onClick={() => { fileInputRef.current.accept = "image/*"; fileInputRef.current.click(); setShowMenu(false); }}
+              className="flex items-center gap-3 w-full px-4 py-3 hover:bg-gray-50 text-sm text-gray-700">
+              🖼️ Image
+            </button>
+            <button onClick={() => { fileInputRef.current.accept = "video/*"; fileInputRef.current.click(); setShowMenu(false); }}
+              className="flex items-center gap-3 w-full px-4 py-3 hover:bg-gray-50 text-sm text-gray-700 border-t">
+              🎥 Video
+            </button>
+            <button onClick={() => { fileInputRef.current.accept = "audio/*"; fileInputRef.current.click(); setShowMenu(false); }}
+              className="flex items-center gap-3 w-full px-4 py-3 hover:bg-gray-50 text-sm text-gray-700 border-t">
+              🎵 Audio
+            </button>
+            <button onClick={() => { handleSendLocation(); setShowMenu(false); }} disabled={locationLoading}
+              className="flex items-center gap-3 w-full px-4 py-3 hover:bg-gray-50 text-sm text-gray-700 border-t disabled:opacity-50">
+              {locationLoading ? "⏳" : "📍"} Location
+            </button>
+          </div>
+        )}
+
+        <input value={text} onChange={e => setText(e.target.value)}
+          onKeyDown={e => { if (e.key === "Enter" && !sending) handleSend(); }}
+          placeholder="Message..."
+          className="flex-1 bg-white border border-gray-200 rounded-full px-4 py-2 text-sm outline-none" />
+
+        <button onMouseDown={startRecording} onMouseUp={stopRecording} onMouseLeave={stopRecording}
+          className={`w-10 h-10 rounded-full flex items-center justify-center transition-all
+      ${isRecording ? "bg-red-400 -translate-y-2 scale-110" : "bg-gray-200"}`}>
+          <FaMicrophone className="text-gray-600" />
+        </button>
+
+        <button onClick={handleSend} disabled={sending}
+          className={`w-10 h-10 rounded-full flex items-center justify-center text-white transition
+      ${sending ? "bg-gray-400" : "bg-[#00BFA5]"}`}>
+          <svg width="18" height="18" fill="white" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" /></svg>
+        </button>
       </div>
     </>
   );

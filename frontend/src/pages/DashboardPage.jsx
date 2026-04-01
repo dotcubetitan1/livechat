@@ -23,72 +23,47 @@ const DashboardPage = () => {
     fetchAllMedia();
   }, [token]);
 
-  return (
-    <div className="flex flex-col bg-white h-full">
-
-      {/* Header */}
-      <div className="flex items-center justify-between bg-gray-100 px-4 py-4 border-b border-gray-200">
-        {/* ✅ Mobile back button */}
-        <button
-          onClick={() => navigate("/chat")}
-          className="md:hidden text-2xl mr-2"
-        >
-          ←
-        </button>
-        <h1 className="font-bold flex-1">My Dashboard</h1>
-        <div
-          onClick={() => navigate("/profile")}
-          className="cursor-pointer text-green-600 font-medium"
-        >
-          Profile
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="px-4 py-3 flex gap-3 border-b border-gray-300 overflow-x-auto">
-        {["images", "videos", "documents"].map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 rounded-full border text-sm capitalize whitespace-nowrap transition
-              ${activeTab === tab
-                ? "bg-green-600 text-white border-green-600"
-                : "border-gray-300 hover:bg-green-600 hover:text-white"
-              }`}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
-
-      {/* Media Grid */}
-      <div className="flex-1 px-4 py-4 overflow-auto">
-        {activeTab === "videos" && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-            {allMedia.allVideo.map((video, i) => (
-              <video key={i} src={video} controls
-                className="w-full h-32 sm:h-40 rounded-lg object-cover"
-              />
-            ))}
-          </div>
-        )}
-        {activeTab === "images" && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-            {allMedia.allImage.map((img, i) => (
-              <img key={i} src={img}
-                className="w-full h-32 sm:h-40 object-cover rounded-lg"
-              />
-            ))}
-          </div>
-        )}
-        {activeTab === "documents" && (
-          <div className="flex items-center justify-center h-40 text-gray-400">
-            No documents found
-          </div>
-        )}
-      </div>
+return (
+  <div className="flex flex-col bg-white h-full">
+    <div className="bg-[#075E54] px-4 py-4 flex items-center gap-3">
+      <button onClick={() => navigate("/chat")} className="md:hidden text-white text-xl">←</button>
+      <h1 className="text-white font-medium flex-1">My Media</h1>
+      <div onClick={() => navigate("/profile")} className="text-white/80 text-sm cursor-pointer">Profile</div>
     </div>
-  );
+
+    <div className="flex border-b border-gray-200 bg-white">
+      {["images", "videos", "documents"].map(tab => (
+        <button key={tab} onClick={() => setActiveTab(tab)}
+          className={`flex-1 py-3 text-sm capitalize transition border-b-2
+            ${activeTab === tab ? "border-[#075E54] text-[#075E54] font-medium" : "border-transparent text-gray-500"}`}>
+          {tab}
+        </button>
+      ))}
+    </div>
+
+    <div className="flex-1 overflow-auto">
+      {activeTab === "images" && (
+        <div className="grid grid-cols-3 gap-0.5 bg-gray-200">
+          {allMedia.allImage.map((img, i) => (
+            <img key={i} src={img} className="w-full aspect-square object-cover" />
+          ))}
+        </div>
+      )}
+      {activeTab === "videos" && (
+        <div className="grid grid-cols-3 gap-0.5 bg-gray-200">
+          {allMedia.allVideo.map((video, i) => (
+            <video key={i} src={video} className="w-full aspect-square object-cover" />
+          ))}
+        </div>
+      )}
+      {activeTab === "documents" && (
+        <div className="flex items-center justify-center h-40 text-gray-400 text-sm">
+          No documents found
+        </div>
+      )}
+    </div>
+  </div>
+);
 };
 
 export default DashboardPage;

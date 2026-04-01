@@ -58,10 +58,13 @@ const MainLayout = () => {
         {/* Dashboard Button */}
         <div
           onClick={() => navigate("/dashboard")}
-          className="px-4 py-3 rounded-2xl font-semibold bg-green-600 flex items-center justify-between cursor-pointer mb-2"
+          className="flex items-center justify-between px-4 py-3 bg-[#075E54] rounded-xl cursor-pointer mb-3"
         >
-          <h2 className="text-white font-bold">Dashboard</h2>
-          <MdDashboard className="text-white" />
+          <h2 className="text-white font-medium text-sm">Dashboard</h2>
+          <MdDashboard className="text-white text-lg" />
+        </div>
+        <div className="bg-[#075E54] px-4 py-4 flex items-center justify-between">
+          <h1 className="text-white text-lg font-semibold">WhatsApp</h1>
         </div>
 
         {/* Contacts */}
@@ -76,26 +79,24 @@ const MainLayout = () => {
             <div
               key={c._id}
               onClick={() => navigate(`/chat/${c._id}`)}
-              className="p-3 flex gap-3 cursor-pointer hover:bg-gray-200 rounded-lg"
+              className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-200 border-b border-gray-100"
             >
-              <div className="relative">
-                <div className="w-10 h-10 rounded-full bg-green-600 text-white flex items-center justify-center overflow-hidden">
-                  {
-                    c.profilePic ? (<img src={c.profilePic} alt="profile" className="w-full h-full object-cover" />) : (
-                    <span className="font-semibold">
-                      {c.fullName?.charAt(0)}
-                    </span>)
-                  }
-
-
+              <div className="relative flex-shrink-0">
+                <div className="w-12 h-12 rounded-full bg-[#075E54] text-white flex items-center justify-center font-medium text-lg overflow-hidden">
+                  {c.profilePic
+                    ? <img src={c.profilePic} className="w-full h-full object-cover" />
+                    : c.fullName?.charAt(0)}
                 </div>
                 {isOnline && (
-                  <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></span>
+                  <span className="absolute bottom-0 right-0 w-3 h-3 bg-[#25D366] rounded-full border-2 border-white"></span>
                 )}
               </div>
-              <div>
-                <p className="font-medium">{c.fullName}</p>
-                <p className="text-xs text-gray-500">
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-center">
+                  <p className="font-medium text-gray-900 text-sm">{c.fullName}</p>
+                  <p className="text-xs text-gray-400">{isOnline ? "now" : ""}</p>
+                </div>
+                <p className="text-xs text-gray-500 truncate mt-0.5">
                   {isOnline ? "Online" : "Offline"}
                 </p>
               </div>

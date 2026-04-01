@@ -66,90 +66,55 @@ const handleLogout = async()=>{
 
   useEffect(() => { fetchProfile(); }, []);
 
-  return (
-    <div className="flex flex-col h-full">
+return (
+  <div className="flex flex-col h-full bg-gray-100">
+    <div className="bg-[#075E54] px-4 py-4 flex items-center gap-3">
+      <button onClick={() => navigate("/dashboard")} className="md:hidden text-white text-xl">←</button>
+      <h1 className="text-white font-medium">Profile</h1>
+    </div>
 
-      {/* ✅ Header with back button */}
-      <div className="flex items-center bg-gray-100 px-4 py-4 border-b-2 border-gray-200">
-        <button
-          onClick={() => navigate("/dashboard")}
-          className="md:hidden text-2xl mr-3"
-        >
-          ←
-        </button>
-        <h1 className="font-semibold text-xl text-gray-700">Profile</h1>
-      </div>
+    {/* Green profile header */}
+    <div className="bg-[#075E54] pb-8 pt-4 flex flex-col items-center">
+      <label className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center cursor-pointer overflow-hidden mb-3">
+        {previewImage
+          ? <img src={previewImage} className="w-full h-full object-cover rounded-full" />
+          : <span className="text-white text-3xl font-medium">{formData.fullName?.charAt(0)?.toUpperCase()}</span>}
+        <input type="file" accept="image/*" className="hidden"
+          onChange={e => { const f = e.target.files[0]; setFormData(p => ({...p, profilePic: f})); setPreviewImage(URL.createObjectURL(f)); }} />
+      </label>
+      <p className="text-white font-medium">{formData.fullName}</p>
+      <p className="text-white/70 text-sm">{formData.email}</p>
+    </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-auto flex justify-center items-start py-8 px-4">
-        <div className="w-full max-w-md">
-          <div className="border-2 border-gray-200 rounded-2xl p-6 md:p-10">
-
-            {/* Profile Image */}
-            <label className="w-32 h-32 md:w-40 md:h-40 mx-auto rounded-full bg-green-500 flex justify-center items-center cursor-pointer overflow-hidden block mb-6">
-              {previewImage ? (
-                <img src={previewImage} className="w-full h-full object-cover rounded-full" />
-              ) : (
-                <span className="text-white text-5xl font-semibold">
-                  {formData.fullName?.charAt(0)?.toUpperCase()}
-                </span>
-              )}
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files[0];
-                  setFormData((prev) => ({ ...prev, profilePic: file }));
-                  setPreviewImage(URL.createObjectURL(file));
-                }}
-              />
-            </label>
-
-            {/* Form */}
-            <form onSubmit={handleUpdateProfile} className="space-y-4">
-              <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-gray-700">Name</label>
-                <input
-                  type="text" name="fullName" value={formData.fullName}
-                  onChange={handleInputChange} placeholder="Enter your name"
-                  className="border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-green-500"
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-gray-700">Email</label>
-                <input
-                  type="email" name="email" value={formData.email}
-                  onChange={handleInputChange} placeholder="Enter email"
-                  className="border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-green-500"
-                />
-              </div>
-              <div className="text-center pt-2">
-                <button
-                  type="submit"
-                  disabled={updating}
-                  className="px-6 bg-green-500 text-white py-2 rounded-lg font-semibold hover:bg-green-600 transition disabled:opacity-50"
-                >
-                  {updating ? "Updating..." : "Update Profile"}
-                </button>
-              </div>
-
-              <div className="text-center pt-2">
-                <button
-                  onClick={handleLogout}
-                  className="px-6 bg-green-500 text-white py-2 rounded-lg font-semibold hover:bg-green-600 transition disabled:opacity-50"
-                >
-                Logout
-                </button>
-              </div>
-
-            </form>
-
+    <div className="flex-1 overflow-auto px-4 py-4 flex flex-col gap-3">
+      <div className="bg-white rounded-xl p-4 shadow-sm">
+        <p className="text-xs text-[#00BFA5] font-medium uppercase tracking-wide mb-3">Account Info</p>
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-gray-500">Full Name</label>
+            <input type="text" name="fullName" value={formData.fullName} onChange={handleInputChange}
+              className="border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#00BFA5]" />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-gray-500">Email</label>
+            <input type="email" name="email" value={formData.email} onChange={handleInputChange}
+              className="border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#00BFA5]" />
           </div>
         </div>
       </div>
+
+      <button onClick={handleUpdateProfile} disabled={updating}
+        className="bg-[#075E54] text-white rounded-full py-3 text-sm font-medium disabled:opacity-60">
+        {updating ? "Updating..." : "Update Profile"}
+      </button>
+
+      <button onClick={handleLogout}
+        className="bg-red-500 text-white rounded-full py-3 text-sm font-medium">
+        Logout
+      </button>
     </div>
-  );
+  </div>
+);
 };
 
 export default ProfilePage;
