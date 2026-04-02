@@ -11,6 +11,7 @@ const ProfilePage = () => {
   const [previewImage, setPreviewImage] = useState("");
   const [updating, setUpdating] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [logoutLoading, setLogoutLoading] = useState(false)
 
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user"));
@@ -32,14 +33,15 @@ const ProfilePage = () => {
   };
   const handleLogout = async () => {
     try {
-      const res = await axios.post(`${API_BASE_URL}/logout`, {}, {
+      setLogoutLoading(true)
+      await axios.post(`${API_BASE_URL}/logout`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       })
-      console.log(res)
       localStorage.clear();
       window.location.href = "/login"
     } catch (error) {
       console.log(error.message);
+      setLogoutLoading(false)
     }
   }
   const handleInputChange = (e) => {
@@ -123,8 +125,15 @@ const ProfilePage = () => {
         </button>
 
         <button onClick={handleLogout}
+          disabled={logoutLoading}
           className="bg-red-500 text-white rounded-full py-3 text-sm font-medium">
-          Logout
+          {logoutLoading ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            </>
+          ) : (
+            "Logout"
+          )}
         </button>
       </div>
     </div>

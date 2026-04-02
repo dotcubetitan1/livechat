@@ -1,4 +1,4 @@
-import { getReceiverSocketId, getIO } from "../lib/socket.js";
+import { getReceiverSocketId, getIO, userSocketMap } from "../lib/socket.js";
 import Message from "../models/Message.js";
 import User from "../models/User.js";
 import sendPushNotification from "../services/notification.js"
@@ -107,7 +107,7 @@ export const sendMessage = async (req, res) => {
         sender.fullName,
         notificationText,
         {
-          senderId:senderId.toString(),
+          senderId: senderId.toString(),
           imageCount,
           videoCount,
           audioCount,
@@ -152,5 +152,13 @@ export const getAllMedia = async (req, res) => {
     res.status(500).json({ message: "server error" });
   }
 };
+export const getOnlineUsers = async (req, res) => {
+  try {
+    const onlineUsers = Object.keys(userSocketMap)
+    res.json({ message: "online user fetch", onlineUsers })
+  } catch (error) {
+    res.status(500).json({ message: "error.message" });
+  }
+}
 
 

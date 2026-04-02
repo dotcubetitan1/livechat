@@ -2,7 +2,7 @@ import { Server } from "socket.io";
 import { socketAuthMiddleware } from "../middleware/socket.auth.middleware.js";
 
 let io;
-const userSocketMap = {}; // { userId: socketId }
+export const userSocketMap = {}; // { userId: socketId }
 
 export const initSocket = (server) => {
   io = new Server(server, {
@@ -37,8 +37,8 @@ export const initSocket = (server) => {
 
 export const getReceiverSocketId = (userId) => {
   const userIdString = userId.toString();
-  console.log("🔍 Looking for socket ID of user:", userIdString);
-  console.log("🗺️ Available users:", Object.keys(userSocketMap));
+  console.log("Looking for socket ID of user:", userIdString);
+  console.log(" Available users:", Object.keys(userSocketMap));
   return userSocketMap[userIdString];
 };
 

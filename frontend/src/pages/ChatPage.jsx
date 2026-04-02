@@ -19,6 +19,7 @@ const ChatPage = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [sending, setSending] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [onlineUser, setOnlineUser] = useState([])
 
   const fileInputRef = useRef(null);
   const bottomRef = useRef(null);
@@ -33,31 +34,35 @@ const ChatPage = () => {
     if (userId) {
       fetchUserDetails(userId);
       fetchMessages(userId);
+      fetchOnlineUsers(userId)
     }
   }, [userId]);
 
   useEffect(() => {
-    console.log("socket inside effect:", socketRef?.current)
     if (!socketRef?.current) return;
-    socketRef.current.on("newMessage", (msg) => {
+    // New message listener
+    const handleNewMessage = (msg) => {
       if (msg.senderId?.toString() === userId || msg.receiverId?.toString() === userId) {
         setMessages((prev) => [...prev, msg]);
       }
-    });
+    }
+    socketRef.current.on("newMessage", handleNewMessage);
 
     return () => {
-      socketRef.current.off("newMessage");
+      socketRef.current.off("newMessage", handleNewMessage);
     };
 
-  }, [userId, socketRef, socketRef?.current]);
+  }, [userId, socketRef]);
 
   const isFirstLoad = useRef(true);
+  useEffect(() => {
+    isFirstLoad.current = true;
+  }, [userId]);
 
   useEffect(() => {
-    if (!bottomRef.current) return;
+    if (!bottomRef.current || messages.length === 0) return;
 
     if (isFirstLoad.current) {
-      // First load → direct jump
       bottomRef.current.scrollIntoView({ behavior: "auto" });
       isFirstLoad.current = false;
     } else {
@@ -65,6 +70,17 @@ const ChatPage = () => {
     }
   }, [messages]);
 
+  const fetchOnlineUsers = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/getOnlineUsers`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setOnlineUser(res.data.onlineUsers);
+      // console.log(res.data.onlineUsers)
+    } catch (error) {
+      console.error("Error fetching online user :", error);
+    }
+  };
   const fetchUserDetails = async (id) => {
     try {
       setLoading(true)
@@ -119,7 +135,6 @@ const ChatPage = () => {
       alert("Geolocation supported nahi hai is browser mein");
       return;
     }
-
     setLocationLoading(true);
 
     navigator.geolocation.getCurrentPosition(
@@ -183,7 +198,6 @@ const ChatPage = () => {
       mediaRecorderRef.current.stop();
     }
   }
-
   if (loading) {
     return <div className="flex justify-center items-center h-full">
       <div className="w-15 h-15 border-4 border-[#075E54] rounded-full border-t-transparent animate-spin mx-auto "></div>
@@ -196,7 +210,6 @@ const ChatPage = () => {
       </div>
     );
   }
-
 
   return (
     <>
@@ -211,7 +224,9 @@ const ChatPage = () => {
         </div>
         <div>
           <p className="text-white font-medium text-sm">{selectedUser.fullName}</p>
-          <p className="text-white/70 text-xs">Online</p>
+          <p className={`text-xs ${onlineUser.includes(userId) ? "text-green-300" : "text-white/50"}`}>
+            {onlineUser.includes(userId) ? "🟢 Online" : "⚫ Offline"}
+          </p>
         </div>
       </div>
 

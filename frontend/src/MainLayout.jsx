@@ -51,7 +51,7 @@ const MainLayout = () => {
       {/* ─── Sidebar ─────────────────────────────────── */}
       <div className={`
         bg-gray-100 p-3 transition-all duration-300
-        w-full md:w-1/4 lg:w-1/5 flex-shrink-0
+        w-full md:w-1/4 lg:w-1/5 shrink-0
         ${(isChatPage || isSubPage) ? "hidden md:block" : "block"}
       `}>
 
@@ -81,7 +81,7 @@ const MainLayout = () => {
               onClick={() => navigate(`/chat/${c._id}`)}
               className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-200 border-b border-gray-100"
             >
-              <div className="relative flex-shrink-0">
+              <div className="relative shrink-0">
                 <div className="w-12 h-12 rounded-full bg-[#075E54] text-white flex items-center justify-center font-medium text-lg overflow-hidden">
                   {c.profilePic
                     ? <img src={c.profilePic} className="w-full h-full object-cover" />
