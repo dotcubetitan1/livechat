@@ -184,6 +184,11 @@ const ChatPage = () => {
     }
   }
 
+  if (loading) {
+    return <div className="flex justify-center items-center h-full">
+      <div className="w-15 h-15 border-4 border-[#075E54] rounded-full border-t-transparent animate-spin mx-auto "></div>
+    </div>
+  }
   if (!selectedUser) {
     return (
       <div className="flex items-center justify-center h-full text-gray-400">
@@ -192,11 +197,6 @@ const ChatPage = () => {
     );
   }
 
-  if (loading) {
-    return <div className="flex justify-center items-center h-full">
-      <div className="w-15 h-15 border-4 border-[#075E54] rounded-full border-t-transparent animate-spin mx-auto "></div>
-    </div>
-  }
 
   return (
     <>
