@@ -26,6 +26,7 @@ export const getMessagesByUserId = async (req, res) => {
         { senderId: myId, receiverId: userToChatId },
         { senderId: userToChatId, receiverId: myId },
       ],
+      deletedFor: { $ne: [myId] }
     }).sort({ createdAt: 1 });
     res.status(200).json(messages);
   } catch (error) {
@@ -98,8 +99,6 @@ export const sendMessage = async (req, res) => {
         notificationText = parts.join(", ")
       }
     }
-    // console.log("Receiver FCM Token:", receiver?.fcmToken);
-    // console.log("Receiver Socket ID:", receiverSocketId);
 
     if (receiver?.fcmToken) {
       await sendPushNotification(
@@ -161,4 +160,107 @@ export const getOnlineUsers = async (req, res) => {
   }
 }
 
+export const messageDeleteByUser = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const { deleteType } = req.body; // "forme" | "foreveryone"
+    const userId = req.user._id;
+
+    const message = await Message.findById(messageId);
+
+    if (!message) {
+      return res.status(404).json({ message: "Message not found" });
+    }
+
+    // DELETE FOR ME — sirf apne liye hide karo
+    if (deleteType === "forme") {
+      // Already deleted check
+      const alreadyDeleted = message.deletedFor.some((id) =>
+        id.equals(userId)
+      );
+      if (alreadyDeleted) {
+        return res
+          .status(400)
+          .json({ message: "Message already deleted for you" });
+      }
+
+      message.deletedFor.push(userId);
+      await message.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Message deleted for you",
+        data: message,
+      });
+    }
+    console.log("senderId", message.senderId)
+    console.log("receiverId", message.receiverId)
+    // DELETE FOR EVERYONE — WhatsApp jaisi time limit (60 min)
+    if (deleteType === "foreveryone") {
+      // Sirf sender delete kar sakta hai
+      if (!message.senderId.equals(userId)) {
+        return res.status(400).json({
+          message: "Only sender can delete message for everyone",
+        });
+      }
+
+      // Already deleted check
+      if (message.deletedForEveryone) {
+        return res.status(400).json({
+          message: "Message already deleted for everyone",
+        });
+      }
+
+      // Time limit check — 60 minutes
+      const now = new Date();
+      const sentAt = new Date(message.createdAt);
+      const diffInMinutes = (now - sentAt) / (1000 * 60);
+      console.log(diffInMinutes)
+      if (diffInMinutes > 60) {
+        return res.status(400).json({
+          message: "Cannot delete for everyone after 60 minutes",
+        });
+      }
+
+      message.deletedForEveryone = true;
+      // Content clear karo (WhatsApp style)
+      message.text = "";
+      message.images = [];
+      message.videos = [];
+      message.audios = [];
+      message.location = null;
+      await message.save();
+
+      // Socket se dono side notify karo
+      const io = getIO();
+      const receiverSocketId = getReceiverSocketId(
+        message.receiverId.toString()
+      );
+      const senderSocketId = getReceiverSocketId(userId.toString());
+
+      const payload = { messageId, deletedForEveryone: true };
+
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit("messageDeleted", payload);
+      }
+      if (senderSocketId) {
+        io.to(senderSocketId).emit("messageDeleted", payload);
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "Message deleted for everyone",
+        data: message,
+      });
+    }
+
+    // Invalid deleteType
+    return res.status(400).json({
+      message: "Invalid deleteType. Use 'forme' or 'foreveryone'",
+    });
+  } catch (error) {
+    console.error("Error in messageDeleteByUser:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
 

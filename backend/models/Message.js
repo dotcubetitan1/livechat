@@ -26,7 +26,16 @@ const messageSchema = mongoose.Schema(
     location:{
       lat:Number,
       lng:Number
+    },
+    deletedFor:[{
+      type:mongoose.Schema.Types.ObjectId,
+      ref:"User"
+    }],
+    deletedForEveryone:{
+      type:Boolean,
+      default:false
     }
+
   },
   { timestamps: true },
 );

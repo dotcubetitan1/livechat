@@ -21,6 +21,11 @@ const ChatPage = () => {
   const [loading, setLoading] = useState(true)
   const [onlineUser, setOnlineUser] = useState([])
 
+  // delete states
+  const [selectedMsg, setSelectedMsg] = useState(null); // long press wala message
+  const [deleteMenu, setDeleteMenu] = useState(false);  // menu visible/hide
+  const longPressTimer = useRef(null);                  // long press timer
+
   const fileInputRef = useRef(null);
   const bottomRef = useRef(null);
   const mediaRecorderRef = useRef(null)
@@ -40,16 +45,31 @@ const ChatPage = () => {
 
   useEffect(() => {
     if (!socketRef?.current) return;
-    // New message listener
+    const handleConnect = () => {
+      console.log("Socket reconnected");
+      fetchMessages(userId);
+      fetchOnlineUsers();
+    }
     const handleNewMessage = (msg) => {
       if (msg.senderId?.toString() === userId || msg.receiverId?.toString() === userId) {
         setMessages((prev) => [...prev, msg]);
       }
     }
+    const handleMessageDeleted = ({ messageId, deletedForEveryone }) => {
+      if (deletedForEveryone) {
+        setMessages((prev) => prev.map((m) => m._id === messageId ? { ...m, deletedForEveryone: true, text: "", images: [], videos: [] } : m))
+      } else {
+        setMessages((prev) => prev.filter((m) => m._id !== messageId));
+      }
+    }
+    socketRef.current.on("connect", handleConnect);
     socketRef.current.on("newMessage", handleNewMessage);
+    socketRef.current.on("messageDeleted", handleMessageDeleted);
 
     return () => {
+      socketRef.current.off("connect", handleConnect);
       socketRef.current.off("newMessage", handleNewMessage);
+      socketRef.current.off("messageDeleted", handleMessageDeleted);
     };
 
   }, [userId, socketRef]);
@@ -58,7 +78,6 @@ const ChatPage = () => {
   useEffect(() => {
     isFirstLoad.current = true;
   }, [userId]);
-
   useEffect(() => {
     if (!bottomRef.current || messages.length === 0) return;
 
@@ -69,7 +88,6 @@ const ChatPage = () => {
       bottomRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
-
   const fetchOnlineUsers = async () => {
     try {
       const res = await axios.get(`${API_BASE_URL}/getOnlineUsers`, {
@@ -105,6 +123,33 @@ const ChatPage = () => {
       console.error("Error fetching messages:", error);
     }
   };
+  const handlePressStart = (msg) => {
+    longPressTimer.current = setTimeout(() => {
+      setSelectedMsg(msg);
+      setDeleteMenu(true);
+    }, 500);
+  };
+  const handlePressEnd = () => {
+    clearTimeout(longPressTimer.current);
+  };
+  const handleDelete = async (deleteType) => {
+    try {
+      const res = await axios.post(`${API_BASE_URL}/delete-message/${selectedMsg._id}`,
+        { deleteType },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      console.log(res)
+      if (deleteType === "forme") {
+        setMessages((prev) => prev.filter((m) => m._id !== selectedMsg._id));
+      }
+    } catch (error) {
+      const msg = error.message
+      alert(msg)
+    } finally {
+      setDeleteMenu(false);
+      setSelectedMsg(null);
+    }
+  }
   const handleSend = async () => {
     if (sending) return;
     if (!text.trim() && images.length === 0) return;
@@ -231,38 +276,57 @@ const ChatPage = () => {
       </div>
 
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-1 bg-[#ECE5DD]">
+      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-1 bg-[#ECE5DD]"
+        onClick={() => { setDeleteMenu(false); setSelectedMsg(null) }}
+      >
         {messages.map((msg) => {
           const isMe = msg.senderId?.toString() === user._id.toString();
+          const isSelected = selectedMsg?._id === msg._id
           return (
-            <div key={msg._id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+            <div
+              key={msg._id}
+              className={`flex ${isMe ? "justify-end" : "justify-start"}`}
+              onMouseDown={() => handlePressStart(msg)}
+              onMouseUp={handlePressEnd}
+              onMouseLeave={handlePressEnd}
+              onTouchStart={() => handlePressStart(msg)}
+              onTouchEnd={handlePressEnd}
+            >
               <div className={`max-w-[75%] px-3 py-2 rounded-lg text-sm shadow-sm
           ${isMe ? "bg-[#DCF8C6] rounded-br-none" : "bg-white rounded-bl-none"}`}>
-                {msg.text && <p className="text-gray-800">{msg.text}</p>}
-                {msg.images?.map((img, i) => (
-                  <img key={i} src={img} onClick={() => setPreview({ type: "image", url: img })}
-                    className="w-40 h-40 object-cover rounded-lg mt-1 cursor-pointer" />
-                ))}
-                {msg.videos?.map((video, i) => (
-                  <video key={i} src={video} onClick={() => setPreview({ type: "video", url: video })}
-                    className="w-40 h-40 object-cover rounded-lg mt-1 cursor-pointer" />
-                ))}
-                {msg.audios?.map((audio, i) => (
-                  <audio key={i} controls className="mt-1 w-48"><source src={audio} /></audio>
-                ))}
-                {msg.location && (
-                  <a href={`https://www.google.com/maps?q=${msg.location.lat},${msg.location.lng}`}
-                    target="_blank" rel="noreferrer"
-                    className="block mt-1 rounded-lg overflow-hidden w-48">
-                    <div className="relative h-28 bg-green-100 rounded-lg border border-gray-200 flex items-center justify-center">
-                      <span className="text-2xl">📍</span>
-                    </div>
-                    <span className="text-blue-500 text-xs mt-1 block text-center">View on Google Maps</span>
-                  </a>
+                {msg.deletedForEveryone ? (
+                  <p> 🚫 This message was deleted</p>
+                ) : (
+                  <>
+                    {msg.text && <p className="text-gray-800">{msg.text}</p>}
+                    {msg.images?.map((img, i) => (
+                      <img key={i} src={img} onClick={() => setPreview({ type: "image", url: img })}
+                        className="w-40 h-40 object-cover rounded-lg mt-1 cursor-pointer" />
+                    ))}
+                    {msg.videos?.map((video, i) => (
+                      <video key={i} src={video} onClick={() => setPreview({ type: "video", url: video })}
+                        className="w-40 h-40 object-cover rounded-lg mt-1 cursor-pointer" />
+                    ))}
+                    {msg.audios?.map((audio, i) => (
+                      <audio key={i} controls className="mt-1 w-48"><source src={audio} /></audio>
+                    ))}
+                    {msg.location && (
+                      <a href={`https://www.google.com/maps?q=${msg.location.lat},${msg.location.lng}`}
+                        target="_blank" rel="noreferrer"
+                        className="block mt-1 rounded-lg overflow-hidden w-48">
+                        <div className="relative h-28 bg-green-100 rounded-lg border border-gray-200 flex items-center justify-center">
+                          <span className="text-2xl">📍</span>
+                        </div>
+                        <span className="text-blue-500 text-xs mt-1 block text-center">View on Google Maps</span>
+                      </a>
+                    )}
+                    <p className={`text-[10px] mt-1 text-right ${isMe ? "text-green-600" : "text-gray-400"}`}>
+                      {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    </p>
+                  </>
                 )}
-                <p className={`text-[10px] mt-1 text-right ${isMe ? "text-green-600" : "text-gray-400"}`}>
-                  {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                </p>
+
+
               </div>
             </div>
           );
@@ -270,6 +334,40 @@ const ChatPage = () => {
         <div ref={bottomRef}></div>
       </div>
 
+      {/* delete menu */}
+      {deleteMenu && selectedMsg && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+          onClick={() => setDeleteMenu(false)}>
+
+          <div className="bg-white rounded-lg w-full max-w-xs" onClick={e => e.stopPropagation()}>
+            <p className="px-4 pt-4 pb-2 text-center text-gray-700">Delete this message?</p>
+
+            <div className="flex border-t mt-2">
+              <button
+                onClick={() => handleDelete("forme")}
+                className="flex-1 py-3 text-center text-gray-600 border-r">
+                For me
+              </button>
+
+              {selectedMsg.senderId?.toString() === user._id.toString() && (
+                <button
+                  onClick={() => handleDelete("foreveryone")}
+                  className="flex-1 py-3 text-center text-red-500 border-r">
+                  Everyone
+                </button>
+              )}
+
+              <button
+                onClick={() => setDeleteMenu(false)}
+                className="flex-1 py-3 text-center text-gray-500">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Preview Modal */}
       {preview && (
         <div
           className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50"

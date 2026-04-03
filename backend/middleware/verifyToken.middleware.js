@@ -4,6 +4,8 @@ import User from "../models/User.js";
 export const verifyToken = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
+    console.log("auth token ", authHeader);
+    
     if (!authHeader) {
       return res.status(401).json({ message: "Unauthorized" });
     }
