@@ -8,7 +8,7 @@ import { IoArrowBackCircleOutline } from "react-icons/io5";
 
 const ChatPage = () => {
   const { userId } = useParams();
-  const { socketRef } = useOutletContext();
+  const { socketRef, socketConnected } = useOutletContext();
   const [selectedUser, setSelectedUser] = useState(null);
   const [messages, setMessages] = useState([]);
   const [images, setImages] = useState([]);
@@ -39,23 +39,37 @@ const ChatPage = () => {
     if (userId) {
       fetchUserDetails(userId);
       fetchMessages(userId);
-      fetchOnlineUsers(userId)
+      fetchOnlineUsers(userId);
     }
   }, [userId]);
 
   useEffect(() => {
-    if (!socketRef?.current) return;
+    console.log("Socket connected status:", socketConnected);
+    if (!socketConnected || !socketRef?.current) {
+      console.log("Waiting for socket connection...");
+      return;
+    }
     const handleConnect = () => {
       console.log("Socket reconnected");
       fetchMessages(userId);
       fetchOnlineUsers();
     }
     const handleNewMessage = (msg) => {
-      if (msg.senderId?.toString() === userId || msg.receiverId?.toString() === userId) {
-        setMessages((prev) => [...prev, msg]);
+      console.log("Message received via socket:", msg)
+      const senderIdOfIncomingMsg = msg.senderId?.toString();
+      const receiverIdOfIncomingMsg = msg.receiverId?.toString();
+      const currentChatWith = userId?.toString();
+
+      if (senderIdOfIncomingMsg === currentChatWith || receiverIdOfIncomingMsg === currentChatWith) {
+        setMessages((prev) => {
+          if (prev.some(m => m._id === msg._id)) return prev;
+          return [...prev, msg];
+        });
       }
     }
+
     const handleMessageDeleted = ({ messageId, deletedForEveryone }) => {
+      console.log("message deleted id",messageId)
       if (deletedForEveryone) {
         setMessages((prev) => prev.map((m) => m._id === messageId ? { ...m, deletedForEveryone: true, text: "", images: [], videos: [] } : m))
       } else {
@@ -72,7 +86,7 @@ const ChatPage = () => {
       socketRef.current.off("messageDeleted", handleMessageDeleted);
     };
 
-  }, [userId, socketRef]);
+  }, [userId, socketConnected, socketRef]);
 
   const isFirstLoad = useRef(true);
   useEffect(() => {
@@ -133,18 +147,17 @@ const ChatPage = () => {
     clearTimeout(longPressTimer.current);
   };
   const handleDelete = async (deleteType) => {
+    setDeleteMenu(false);
     try {
-      const res = await axios.post(`${API_BASE_URL}/delete-message/${selectedMsg._id}`,
+      await axios.post(`${API_BASE_URL}/delete-message/${selectedMsg._id}`,
         { deleteType },
         { headers: { Authorization: `Bearer ${token}` } }
       )
-      console.log(res)
-      if (deleteType === "forme") {
-        setMessages((prev) => prev.filter((m) => m._id !== selectedMsg._id));
-      }
+
     } catch (error) {
       const msg = error.message
       alert(msg)
+      fetchMessages(userId)
     } finally {
       setDeleteMenu(false);
       setSelectedMsg(null);
@@ -160,9 +173,12 @@ const ChatPage = () => {
       images.forEach((item) => {
         formData.append("images", item.file);
       });
-      await axios.post(`${API_BASE_URL}/sendMessage/${userId}`, formData, {
+      const res = await axios.post(`${API_BASE_URL}/sendMessage/${userId}`, formData, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      const newMessage = res.data;
+      setMessages((prev) => [...prev, newMessage]);
+      console.log(newMessage)
       setText("");
       setImages([]);
       setShowMenu(false);

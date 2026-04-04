@@ -9,14 +9,55 @@ import { API_BASE_URL } from "./api/config";
 const MainLayout = () => {
   const [contacts, setContacts] = useState([]);
   const [onlineUser, setOnlineUser] = useState([]);
+  const [socketConnected, setSocketConnected] = useState(false);
+
   const socketRef = useRef();
   const navigate = useNavigate();
   const location = useLocation();
   const token = localStorage.getItem("token");
 
-  const isChatPage = location.pathname.match(/^\/chat\/.+/);;
+
+  const isChatPage = location.pathname.match(/^\/chat\/.+/);
   const isSubPage = location.pathname.includes("/profile") ||
     location.pathname.includes("/dashboard");
+
+  useEffect(() => {
+    if (!token) return;
+
+    socketRef.current = io(API_BASE_URL, {
+      auth: { token },
+      transports: ["websocket"],
+    });
+
+    socketRef.current.on("connect", () => {
+      console.log("Socket connected in MainLayout");
+      setSocketConnected(true);
+    });
+
+    socketRef.current.on("getOnlineUsers", (users) => {
+      setOnlineUser(users);
+    });
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
+    };
+  }, [token]);
+
+
+  useEffect(() => {
+    socketRef.current = io(API_BASE_URL, {
+      auth: { token },
+      transports: ["websocket"],
+    });
+    socketRef.current.on("getOnlineUsers", (users) => {
+      setOnlineUser(users);
+    });
+    return () => {
+      socketRef.current.disconnect();
+    };
+  }, [token]);
 
   useEffect(() => {
     const fetchContacts = async () => {
@@ -32,18 +73,6 @@ const MainLayout = () => {
     fetchContacts();
   }, [token]);
 
-  useEffect(() => {
-    socketRef.current = io(API_BASE_URL, {
-      auth: { token },
-      transports: ["websocket"],
-    });
-    socketRef.current.on("getOnlineUsers", (users) => {
-      setOnlineUser(users);
-    });
-    return () => {
-      socketRef.current.disconnect();
-    };
-  }, [token]);
 
   return (
     <div className="w-screen h-screen flex relative overflow-hidden">
@@ -54,7 +83,6 @@ const MainLayout = () => {
         w-full md:w-1/4 lg:w-1/5 shrink-0
         ${(isChatPage || isSubPage) ? "hidden md:block" : "block"}
       `}>
-
         {/* Dashboard Button */}
         <div
           onClick={() => navigate("/dashboard")}
@@ -110,7 +138,7 @@ const MainLayout = () => {
   flex flex-col flex-1 bg-white overflow-hidden
   ${(isChatPage || isSubPage) ? "flex" : "hidden md:flex"}
 `}>
-        <Outlet context={{ socketRef }} />
+        <Outlet context={{ socketRef, socketConnected }} />
       </div>
 
     </div>

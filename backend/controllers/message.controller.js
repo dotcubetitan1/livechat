@@ -73,9 +73,6 @@ export const sendMessage = async (req, res) => {
       location: lat && lng ? { lat, lng } : null
     });
 
-    const io = getIO();
-    const receiverSocketId = getReceiverSocketId(receiverId);
-
     const receiver = await User.findById(receiverId)
     const sender = await User.findById(senderId)
 
@@ -114,15 +111,12 @@ export const sendMessage = async (req, res) => {
         }
       )
     }
+    const io = getIO();
+    io.to(receiverId.toString()).emit("newMessage", newMessage);
+    console.log(`Message sent to room: ${receiverId}`);
 
-    if (receiverSocketId) {
-      console.log("Message sent to receiver via socket");
-      io.to(receiverSocketId).emit("newMessage", newMessage);
-    }
-    const senderSocketId = getReceiverSocketId(senderId.toString());
-    if (senderSocketId) {
-      io.to(senderSocketId).emit("newMessage", newMessage);
-    }
+    // Sender ko bhejo (Doosre devices/tabs ke liye)
+    // io.to(senderId.toString()).emit("newMessage", newMessage);
 
     res.status(201).json(newMessage);
   } catch (error) {
