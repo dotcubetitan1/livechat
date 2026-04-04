@@ -34,6 +34,10 @@ const messageSchema = mongoose.Schema(
     deletedForEveryone:{
       type:Boolean,
       default:false
+    },
+    isEdited:{
+      type:Boolean,
+      default:false
     }
 
   },

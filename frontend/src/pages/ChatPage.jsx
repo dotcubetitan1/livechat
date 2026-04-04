@@ -21,10 +21,15 @@ const ChatPage = () => {
   const [loading, setLoading] = useState(true)
   const [onlineUser, setOnlineUser] = useState([])
 
-  // delete states
-  const [selectedMsg, setSelectedMsg] = useState(null); // long press wala message
-  const [deleteMenu, setDeleteMenu] = useState(false);  // menu visible/hide
-  const longPressTimer = useRef(null);                  // long press timer
+  const [selectedMsg, setSelectedMsg] = useState(null);
+  const [showActionMenu, setShowActionMenu] = useState(false);
+
+  // edit states
+  const [editingMsg, setEditingMsg] = useState(null);
+  const [editText, setEditText] = useState("");
+
+
+  const longPressTimer = useRef(null);
 
   const fileInputRef = useRef(null);
   const bottomRef = useRef(null);
@@ -69,21 +74,31 @@ const ChatPage = () => {
     }
 
     const handleMessageDeleted = ({ messageId, deletedForEveryone }) => {
-      console.log("message deleted id",messageId)
+      console.log("message deleted id", messageId)
       if (deletedForEveryone) {
         setMessages((prev) => prev.map((m) => m._id === messageId ? { ...m, deletedForEveryone: true, text: "", images: [], videos: [] } : m))
       } else {
         setMessages((prev) => prev.filter((m) => m._id !== messageId));
       }
     }
+    const handleMessageUpdated = ({ messageId, text, isEdited }) => {
+      console.log("Message updated via socket:", messageId, text);
+      setMessages((prev) => prev.map((m) =>
+        m._id === messageId
+          ? { ...m, text: text, isEdited: true }
+          : m
+      ));
+    };
     socketRef.current.on("connect", handleConnect);
     socketRef.current.on("newMessage", handleNewMessage);
     socketRef.current.on("messageDeleted", handleMessageDeleted);
+    socketRef.current.on("messageUpdated", handleMessageUpdated);
 
     return () => {
       socketRef.current.off("connect", handleConnect);
       socketRef.current.off("newMessage", handleNewMessage);
       socketRef.current.off("messageDeleted", handleMessageDeleted);
+      socketRef.current.off("messageUpdated", handleMessageUpdated);
     };
 
   }, [userId, socketConnected, socketRef]);
@@ -140,14 +155,14 @@ const ChatPage = () => {
   const handlePressStart = (msg) => {
     longPressTimer.current = setTimeout(() => {
       setSelectedMsg(msg);
-      setDeleteMenu(true);
+      setShowActionMenu(true);
     }, 500);
   };
   const handlePressEnd = () => {
     clearTimeout(longPressTimer.current);
   };
   const handleDelete = async (deleteType) => {
-    setDeleteMenu(false);
+    setShowActionMenu(false);
     try {
       await axios.post(`${API_BASE_URL}/delete-message/${selectedMsg._id}`,
         { deleteType },
@@ -159,8 +174,24 @@ const ChatPage = () => {
       alert(msg)
       fetchMessages(userId)
     } finally {
-      setDeleteMenu(false);
+      setShowActionMenu(false);
       setSelectedMsg(null);
+    }
+  }
+  const handleEditMessage = async () => {
+    if (!editText.trim()) return;
+
+    try {
+      await axios.post(`${API_BASE_URL}/update-message/${editingMsg._id}`,
+        { text: editText },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      setEditingMsg(null);
+      setEditText("");
+    } catch (error) {
+      const msg = error.response?.data?.message || error.message;
+      alert(msg);
+      fetchMessages(userId);
     }
   }
   const handleSend = async () => {
@@ -293,11 +324,10 @@ const ChatPage = () => {
 
       {/* Messages area */}
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-1 bg-[#ECE5DD]"
-        onClick={() => { setDeleteMenu(false); setSelectedMsg(null) }}
+        onClick={() => { setShowActionMenu(false); setSelectedMsg(null) }}
       >
         {messages.map((msg) => {
           const isMe = msg.senderId?.toString() === user._id.toString();
-          const isSelected = selectedMsg?._id === msg._id
           return (
             <div
               key={msg._id}
@@ -314,7 +344,14 @@ const ChatPage = () => {
                   <p> 🚫 This message was deleted</p>
                 ) : (
                   <>
-                    {msg.text && <p className="text-gray-800">{msg.text}</p>}
+                    {msg.text && (
+                      <div>
+                        <p className="text-gray-800">{msg.text}</p>
+                        {msg.isEdited && (
+                          <span className="text-[10px] text-gray-400 ml-1">edited</span>
+                        )}
+                      </div>
+                    )}
                     {msg.images?.map((img, i) => (
                       <img key={i} src={img} onClick={() => setPreview({ type: "image", url: img })}
                         className="w-40 h-40 object-cover rounded-lg mt-1 cursor-pointer" />
@@ -350,33 +387,89 @@ const ChatPage = () => {
         <div ref={bottomRef}></div>
       </div>
 
-      {/* delete menu */}
-      {deleteMenu && selectedMsg && (
+      {/* Action Menu - Delete + Edit Together */}
+      {showActionMenu && selectedMsg && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
-          onClick={() => setDeleteMenu(false)}>
+          onClick={() => { setShowActionMenu(false); setSelectedMsg(null); }}>
 
           <div className="bg-white rounded-lg w-full max-w-xs" onClick={e => e.stopPropagation()}>
-            <p className="px-4 pt-4 pb-2 text-center text-gray-700">Delete this message?</p>
+            <p className="px-4 pt-4 pb-2 text-center text-gray-700">Message Options</p>
 
-            <div className="flex border-t mt-2">
-              <button
-                onClick={() => handleDelete("forme")}
-                className="flex-1 py-3 text-center text-gray-600 border-r">
-                For me
-              </button>
+            <div className="flex flex-col border-t">
 
-              {selectedMsg.senderId?.toString() === user._id.toString() && (
+              {/* Edit Option - Sirf sender ke liye */}
+              {selectedMsg.senderId?.toString() === user._id.toString() && !selectedMsg.deletedForEveryone && (
                 <button
-                  onClick={() => handleDelete("foreveryone")}
-                  className="flex-1 py-3 text-center text-red-500 border-r">
-                  Everyone
+                  onClick={() => {
+                    setShowActionMenu(false);
+                    setEditingMsg(selectedMsg);
+                    setEditText(selectedMsg.text);
+                  }}
+                  className="w-full px-4 py-3 text-left text-blue-500 hover:bg-gray-50 flex items-center gap-3"
+                >
+                  ✏️ <span>Edit Message</span>
                 </button>
               )}
 
+              {/* Delete for me */}
               <button
-                onClick={() => setDeleteMenu(false)}
-                className="flex-1 py-3 text-center text-gray-500">
+                onClick={() => handleDelete("forme")}
+                className="w-full px-4 py-3 text-left text-gray-700 hover:bg-gray-50 flex items-center gap-3"
+              >
+                🗑️ <span>Delete for me</span>
+              </button>
+
+              {/* Delete for everyone - Sirf sender ke liye */}
+              {selectedMsg.senderId?.toString() === user._id.toString() && (
+                <button
+                  onClick={() => handleDelete("foreveryone")}
+                  className="w-full px-4 py-3 text-left text-red-500 hover:bg-gray-50 flex items-center gap-3 border-t"
+                >
+                  🚫 <span>Delete for everyone</span>
+                </button>
+              )}
+
+              {/* Cancel */}
+              <button
+                onClick={() => { setShowActionMenu(false); setSelectedMsg(null); }}
+                className="w-full px-4 py-3 text-left text-gray-400 hover:bg-gray-50 flex items-center gap-3 border-t"
+              >
+                ✕ <span>Cancel</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Edit Message Modal */}
+      {editingMsg && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+          onClick={() => { setEditingMsg(null); setEditText(""); }}>
+
+          <div className="bg-white rounded-lg w-full max-w-md" onClick={e => e.stopPropagation()}>
+            <div className="px-4 py-3 border-b">
+              <h3 className="font-medium text-center">Edit Message</h3>
+            </div>
+
+            <textarea
+              value={editText}
+              onChange={(e) => setEditText(e.target.value)}
+              className="w-full p-3 border-0 focus:outline-none resize-none text-gray-800"
+              rows={3}
+              autoFocus
+            />
+
+            <div className="flex border-t">
+              <button
+                onClick={() => { setEditingMsg(null); setEditText(""); }}
+                className="flex-1 py-3 text-center text-gray-500 border-r"
+              >
                 Cancel
+              </button>
+              <button
+                onClick={handleEditMessage}
+                className="flex-1 py-3 text-center text-green-600 font-medium"
+              >
+                Save
               </button>
             </div>
           </div>

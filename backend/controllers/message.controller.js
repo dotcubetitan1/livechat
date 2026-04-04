@@ -15,7 +15,6 @@ export const getAllContacts = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
 export const getMessagesByUserId = async (req, res) => {
   try {
     const myId = req.user._id;
@@ -34,7 +33,6 @@ export const getMessagesByUserId = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
-
 export const sendMessage = async (req, res) => {
   try {
     const { text, lat, lng } = req.body;
@@ -121,13 +119,53 @@ export const sendMessage = async (req, res) => {
     res.status(201).json(newMessage);
   } catch (error) {
     console.error("Error in sendMessage:", error);
-    res.status(500).json({
-      error: "Internal server error",
-      details: error.message,
-    });
+   res.status(500).json({ message: "server error", error });
   }
 };
+export const updateMessage = async (req, res) => {
+  try {
+    const { id: messageId } = req.params;
+    const { text, lat, lng } = req.body;
+    const userId = req.user._id;
+    const message = await Message.findById({_id:messageId})
+    if (!message) {
+      return res.status(404).json({ message: "Message not found" });
+    }
+    if (!message.senderId.equals(userId)) {
+      return res.status(400).json({ message: "You can only edit your own messages" });
+    }
 
+    if (text !== undefined) {
+      message.text = text;
+      message.isEdited = true;
+    }
+
+    if (lat && lng) {
+      message.location = { lat, lng };
+      message.isEdited = true;
+    }
+    const updatedMessage = await message.save()
+    const io = getIO();
+    const payload = {
+      messageId: updatedMessage._id,
+      text: updatedMessage.text,
+      location: updatedMessage.location,
+      isEdited: updatedMessage.isEdited
+    };
+
+    io.to(updatedMessage.receiverId.toString()).emit("messageUpdated", payload);
+    console.log(`update message sent for receiver:${updatedMessage.receiverId}`);
+
+    res.status(200).json({
+      success: true,
+      message: "Message updated successfully",
+      data: updatedMessage,
+    });
+  } catch (error) {
+    console.error("Error in sendMessage:", error);
+   res.status(500).json({ message: "server error" , error });
+  }
+};
 export const getAllMedia = async (req, res) => {
   try {
     const messages = await Message.find().lean();
@@ -153,7 +191,6 @@ export const getOnlineUsers = async (req, res) => {
     res.status(500).json({ message: "error.message" });
   }
 }
-
 export const messageDeleteByUser = async (req, res) => {
   try {
     const { messageId } = req.params;
@@ -257,4 +294,5 @@ export const messageDeleteByUser = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
