@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { API_BASE_URL } from "../api/config.js";
-import { getFCMToken } from "../notification/firebase.js"
+import { getFCMToken } from "../config/firebase.js"
+import { signInWithGoogle } from "../config/firebase.js"
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -32,14 +33,32 @@ const LoginPage = () => {
       setLoading(false);
     }
   };
+  const handleGoogleLogin = async () => {
+    try {
+      const googleUser = await signInWithGoogle();
+      console.log(googleUser)
+      const res = await axios.post(`${API_BASE_URL}/socialLogin`, {
+        email: googleUser.email,
+        fullName: googleUser.displayName,
+        googleId: googleUser.uid,
+        profilePic: googleUser.photoURL
+      })
+      console.log(res);
+      localStorage.setItem("token", res.data.data.token);
+      localStorage.setItem("user", JSON.stringify(res.data.data.user));
+      navigate("/chat");
+    } catch (error) {
+      console.error("Google login error:", error);
+    }
+  }
 
   return (
     <div className="w-screen h-screen flex flex-col items-center justify-center bg-gray-100">
       {/* Top green header */}
-      <div className="w-full bg-[#075E54] py-10 flex flex-col items-center justify-center mb-0">
+      <div className="w-full bg-[#075E54] py-4 flex flex-col items-center justify-center mb-0">
         <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mb-3">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="white">
-            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
           </svg>
         </div>
         <h1 className="text-white text-2xl font-medium">WhatsApp</h1>
@@ -80,11 +99,19 @@ const LoginPage = () => {
           </button>
         </div>
 
-        <p className="text-center text-sm text-gray-500 mt-6">
+        <p className="text-center text-sm text-gray-500 mt-3">
           Don't have an account?{" "}
           <Link to="/signup" className="text-[#00BFA5] font-medium">Sign up</Link>
         </p>
+        <button
+          onClick={handleGoogleLogin}
+          className=" w-full flex gap-2 justify-center items-center py-2.5 mt-3 border border-gray-300 rounded-full hover:bg-gray-50 transition "
+        >
+          <img src="https://www.google.com/favicon.ico" className="w-5 h-5" />
+          <span className="text-sm text-gray-700 font-medium">Continue with Google</span>
+        </button>
       </div>
+
     </div>
   );
 };

@@ -6,7 +6,7 @@ import DashboardPage from "./pages/DashboardPage";
 import MainLayout from "./MainLayout";
 import ProfilePage from "./pages/ProfilePage";
 import { onMessage } from "firebase/messaging";
-import { getFCMToken, messaging } from "./notification/firebase";
+import { getFCMToken, messaging } from "./config/firebase";
 import { useEffect } from "react";
 function App() {
   useEffect(() => {

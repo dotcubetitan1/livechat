@@ -30,8 +30,8 @@ const ChatPage = () => {
   const [editingMsg, setEditingMsg] = useState(null);
   const [editText, setEditText] = useState("");
 
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
-
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  
   const longPressTimer = useRef(null);
 
   const fileInputRef = useRef(null);
@@ -297,6 +297,26 @@ const ChatPage = () => {
   };
   const handleEmojiClick = (emojiData) => {
     setText((prev) => prev + emojiData.emoji)
+    // console.log(emojiData)
+  }
+  const handleReaction = async (emoji, msgId) => {
+    console.log(msgId, emoji)
+    setReactionMsgId(null)
+    try {
+      await axios.post(
+        `${API_BASE_URL}/message-reaction/${msgId}`,
+        { emoji },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setMessages((prev) =>
+        prev.map((m) => m._id === msgId ? {
+          ...m,
+          reactions: [...m.reactions.filter((r) => r.userId !== user._id)]
+        }:m)
+      )
+    } catch (error) {
+
+    }
   }
   if (loading) {
     return <div className="flex justify-center items-center h-full">
@@ -313,7 +333,6 @@ const ChatPage = () => {
 
   return (
     <>
-
       {/* Header */}
       <div className="px-4 py-3 bg-[#075E54] flex items-center gap-3">
         <button onClick={() => navigate("/chat")} className="md:hidden text-white text-2xl mr-1">
@@ -581,7 +600,7 @@ const ChatPage = () => {
           onClick={() => setShowEmojiPicker((p) => !p)}
           className="w-10 h-10 text-gray-500 hover:bg-gray-300 rounded-full flex justify-center items-center"
         >
-          <BsEmojiSmile className="text-xl"/>
+          <BsEmojiSmile className="text-xl" />
         </button>
         <button onClick={() => setShowMenu(p => !p)}
           className="w-10 h-10 flex items-center justify-center text-gray-500 rounded-full hover:bg-gray-200">

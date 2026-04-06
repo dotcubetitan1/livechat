@@ -119,7 +119,7 @@ export const sendMessage = async (req, res) => {
     res.status(201).json(newMessage);
   } catch (error) {
     console.error("Error in sendMessage:", error);
-   res.status(500).json({ message: "server error", error });
+    res.status(500).json({ message: "server error", error });
   }
 };
 export const updateMessage = async (req, res) => {
@@ -127,7 +127,7 @@ export const updateMessage = async (req, res) => {
     const { id: messageId } = req.params;
     const { text, lat, lng } = req.body;
     const userId = req.user._id;
-    const message = await Message.findById({_id:messageId})
+    const message = await Message.findById({ _id: messageId })
     if (!message) {
       return res.status(404).json({ message: "Message not found" });
     }
@@ -163,7 +163,7 @@ export const updateMessage = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in sendMessage:", error);
-   res.status(500).json({ message: "server error" , error });
+    res.status(500).json({ message: "server error", error });
   }
 };
 export const getAllMedia = async (req, res) => {
@@ -294,5 +294,28 @@ export const messageDeleteByUser = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+export const addEmoji = async (req, res) => {
+  const { messageId } = req.params;
+  const { emoji } = req.body;
+  const userId = req.user._id;
+  const message = await Message.findByIdAndUpdate(
+    messageId,
+    {
+      $pull: { reactions: { userId } }
+    },
+    { new: true }
+  )
+  if (!message) return res.status(400).json({ message: "message not found" })
+  const alreadyReaction = message.reactions?.some(
+    (r) => r.userId.equals(userId) && r.emoji === emoji);
+  if (!alreadyReaction) {
+    await Message.findByIdAndUpdate(
+      messageId,
+      { $push: { reactions: { userId, emoji } } },
+      { new: true }
+    )
+  }
+  res.status(200).json({ success: true, message: "emoji add success" })
+}
 
 

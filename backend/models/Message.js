@@ -17,28 +17,39 @@ const messageSchema = mongoose.Schema(
     images: [{
       type: String,
     }],
-    videos:[{
-      type:String
+    videos: [{
+      type: String
     }],
-    audios:[{
-      type:String
+    audios: [{
+      type: String
     }],
-    location:{
-      lat:Number,
-      lng:Number
+    location: {
+      lat: Number,
+      lng: Number
     },
-    deletedFor:[{
-      type:mongoose.Schema.Types.ObjectId,
-      ref:"User"
+    deletedFor: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User"
     }],
-    deletedForEveryone:{
-      type:Boolean,
-      default:false
+    deletedForEveryone: {
+      type: Boolean,
+      default: false
     },
-    isEdited:{
-      type:Boolean,
-      default:false
-    }
+    isEdited: {
+      type: Boolean,
+      default: false
+    },
+    reactions: [
+      {
+        userId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User"
+        },
+        emoji: {
+          type: String
+        }
+      }
+    ]
 
   },
   { timestamps: true },

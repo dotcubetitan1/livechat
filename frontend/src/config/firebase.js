@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase/app"
 import { getMessaging, getToken } from "firebase/messaging";
+import {getAuth, GoogleAuthProvider, signInWithPopup} from "firebase/auth"
 
 const firebaseConfig = {
     apiKey: "AIzaSyAf8sMsqFSy8vQ-ScIvUiyO2DkOLmZikko",
@@ -13,6 +14,19 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const messaging = getMessaging(app);
+
+export const auth = getAuth(app)
+export const googleProvider = new GoogleAuthProvider();
+
+export const signInWithGoogle = async()=>{
+
+    console.log("sign in with google")
+    console.log(auth)
+    console.log(googleProvider)
+    const result = await signInWithPopup(auth, googleProvider);
+    console.log("result", result)
+    return result.user
+}
 
 export const getFCMToken = async () => {
     try {

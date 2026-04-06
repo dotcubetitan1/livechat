@@ -48,6 +48,37 @@ export const login = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+export const socialLogin = async (req, res) => {
+  try {
+    const { email, fullName, profilePic, socialLoginId } = req.body;
+    console.log(req.body)
+    const existUser = await User.findOne({ email }).lean();
+    const isAlreadyExist = !!existUser
+    const user = await User.findOneAndUpdate(
+      { email },
+      {
+        $set: { fullName, profilePic, socialLoginId },
+        $setOnInsert: { email }
+      },
+      {
+        new: true,
+        upsert: true,
+        lean: true
+      }
+    )
+    const token = jwt.sign(
+      { userId: user._id, email: user.email, fullName: user.fullName },
+      process.env.JWT_SECRET, { expiresIn: "365d" }
+    )
+    res.status(200).json({
+      message: "login successFully",
+      data: { token, user, isAlreadyExist }
+    })
+  } catch (error) {
+    console.error("Social login error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+}
 export const getProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select("-password");

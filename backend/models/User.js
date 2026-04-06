@@ -18,9 +18,13 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
-    fcmToken:{
-      type:String,
-      default:""
+    fcmToken: {
+      type: String,
+      default: ""
+    },
+    socialLoginId: {
+      type: String,
+      default: ""
     }
   },
   { timestamps: true },
