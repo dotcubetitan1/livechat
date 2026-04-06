@@ -10,16 +10,12 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// Notification click handler - PEHLE LAGAO
 self.addEventListener("notificationclick", (event) => {
     console.log("Notification clicked in service worker");
     console.log("Event:", event);
-    console.log("Notification:", event.notification);
-    console.log("Data:", event.notification.data);
     event.notification.close();
 
     const senderId = event.notification.data?.senderId;
-    console.log("Sender ID:", senderId);
 
     if (senderId) {
         const url = `/chat/${senderId}`;
@@ -49,7 +45,6 @@ self.addEventListener("notificationclick", (event) => {
     }
 });
 
-// Background message handler
 messaging.onBackgroundMessage((payload) => {
     console.log("Background message received:", payload);
 
@@ -57,13 +52,11 @@ messaging.onBackgroundMessage((payload) => {
     const body = payload.data?.body;
     const senderId = payload.data?.senderId;
 
-    console.log("Showing notification for:", senderId);
-
     self.registration.showNotification(title, {
         body: body,
         icon: "/back.png",
         badge: "/back.png",
-        tag: `chat-${senderId}`, // Different tag for different chats
+        tag: `chat-${senderId}`,
         renotify: true,
         data: {
             senderId: senderId,
@@ -74,11 +67,11 @@ messaging.onBackgroundMessage((payload) => {
 
 // Service worker install and activate logs
 self.addEventListener('install', (event) => {
-    console.log("✅ Service Worker installed");
+    console.log(" Service Worker installed");
     self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-    console.log("✅ Service Worker activated");
+    console.log("Service Worker activated");
     event.waitUntil(clients.claim());
 });

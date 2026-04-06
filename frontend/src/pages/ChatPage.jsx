@@ -5,6 +5,8 @@ import { API_BASE_URL } from "../api/config";
 import { GrGallery } from "react-icons/gr";
 import { FaMicrophone } from "react-icons/fa";
 import { IoArrowBackCircleOutline } from "react-icons/io5";
+import EmojiPicker from "emoji-picker-react"
+import { BsEmojiSmile } from "react-icons/bs";
 
 const ChatPage = () => {
   const { userId } = useParams();
@@ -28,6 +30,7 @@ const ChatPage = () => {
   const [editingMsg, setEditingMsg] = useState(null);
   const [editText, setEditText] = useState("");
 
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
 
   const longPressTimer = useRef(null);
 
@@ -72,9 +75,8 @@ const ChatPage = () => {
         });
       }
     }
-
     const handleMessageDeleted = ({ messageId, deletedForEveryone }) => {
-      console.log("message deleted id", messageId)
+      console.log("Message delete via socket")
       if (deletedForEveryone) {
         setMessages((prev) => prev.map((m) => m._id === messageId ? { ...m, deletedForEveryone: true, text: "", images: [], videos: [] } : m))
       } else {
@@ -82,7 +84,7 @@ const ChatPage = () => {
       }
     }
     const handleMessageUpdated = ({ messageId, text, isEdited }) => {
-      console.log("Message updated via socket:", messageId, text);
+      console.log("Message updated via socket");
       setMessages((prev) => prev.map((m) =>
         m._id === messageId
           ? { ...m, text: text, isEdited: true }
@@ -107,6 +109,7 @@ const ChatPage = () => {
   useEffect(() => {
     isFirstLoad.current = true;
   }, [userId]);
+
   useEffect(() => {
     if (!bottomRef.current || messages.length === 0) return;
 
@@ -117,6 +120,7 @@ const ChatPage = () => {
       bottomRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
+
   const fetchOnlineUsers = async () => {
     try {
       const res = await axios.get(`${API_BASE_URL}/getOnlineUsers`, {
@@ -152,15 +156,6 @@ const ChatPage = () => {
       console.error("Error fetching messages:", error);
     }
   };
-  const handlePressStart = (msg) => {
-    longPressTimer.current = setTimeout(() => {
-      setSelectedMsg(msg);
-      setShowActionMenu(true);
-    }, 500);
-  };
-  const handlePressEnd = () => {
-    clearTimeout(longPressTimer.current);
-  };
   const handleDelete = async (deleteType) => {
     setShowActionMenu(false);
     try {
@@ -180,14 +175,16 @@ const ChatPage = () => {
   }
   const handleEditMessage = async () => {
     if (!editText.trim()) return;
-
+    setMessages((prev) => prev.map((m) =>
+      m._id === editingMsg._id ? { ...m, text: editText, isEdited: true } : m
+    ))
+    setEditingMsg(null);
+    setEditText("")
     try {
       await axios.post(`${API_BASE_URL}/update-message/${editingMsg._id}`,
         { text: editText },
         { headers: { Authorization: `Bearer ${token}` } }
       )
-      setEditingMsg(null);
-      setEditText("");
     } catch (error) {
       const msg = error.response?.data?.message || error.message;
       alert(msg);
@@ -207,9 +204,8 @@ const ChatPage = () => {
       const res = await axios.post(`${API_BASE_URL}/sendMessage/${userId}`, formData, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const newMessage = res.data;
-      setMessages((prev) => [...prev, newMessage]);
-      console.log(newMessage)
+      setMessages((prev) => [...prev, res.data]);
+      // console.log(res.data)
       setText("");
       setImages([]);
       setShowMenu(false);
@@ -289,6 +285,18 @@ const ChatPage = () => {
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
     }
+  }
+  const handlePressStart = (msg) => {
+    longPressTimer.current = setTimeout(() => {
+      setSelectedMsg(msg);
+      setShowActionMenu(true);
+    }, 500);
+  };
+  const handlePressEnd = () => {
+    clearTimeout(longPressTimer.current);
+  };
+  const handleEmojiClick = (emojiData) => {
+    setText((prev) => prev + emojiData.emoji)
   }
   if (loading) {
     return <div className="flex justify-center items-center h-full">
@@ -378,8 +386,6 @@ const ChatPage = () => {
                     </p>
                   </>
                 )}
-
-
               </div>
             </div>
           );
@@ -559,6 +565,24 @@ const ChatPage = () => {
 
       {/* Input bar */}
       <div className="bg-[#F0F0F0] px-2 py-2 flex items-center gap-2 border-t border-gray-200">
+        {showEmojiPicker && (
+          <div className="absolute bottom-16 z-50 w-full md:w-auto ">
+            <EmojiPicker
+              onEmojiClick={handleEmojiClick}
+              height={350}
+              width="100%"
+              searchDisabled={false}
+              skinTonesDisabled
+              previewConfig={{ showPreview: false }}
+            />
+          </div>
+        )}
+        <button
+          onClick={() => setShowEmojiPicker((p) => !p)}
+          className="w-10 h-10 text-gray-500 hover:bg-gray-300 rounded-full flex justify-center items-center"
+        >
+          <BsEmojiSmile className="text-xl"/>
+        </button>
         <button onClick={() => setShowMenu(p => !p)}
           className="w-10 h-10 flex items-center justify-center text-gray-500 rounded-full hover:bg-gray-200">
           <GrGallery className="text-xl" />

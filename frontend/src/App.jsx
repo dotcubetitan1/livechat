@@ -8,7 +8,6 @@ import ProfilePage from "./pages/ProfilePage";
 import { onMessage } from "firebase/messaging";
 import { getFCMToken, messaging } from "./notification/firebase";
 import { useEffect } from "react";
-;
 function App() {
   useEffect(() => {
     getFCMToken();
