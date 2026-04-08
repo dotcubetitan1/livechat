@@ -1,21 +1,28 @@
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import axios from "axios";
 import { io } from "socket.io-client";
 import { FaPlusCircle } from "react-icons/fa";
 import { MdDashboard } from "react-icons/md";
 import { API_BASE_URL } from "./api/config";
+import InfiniteScroll from "react-infinite-scroll-component"
 
 const MainLayout = () => {
   const [contacts, setContacts] = useState([]);
   const [onlineUser, setOnlineUser] = useState([]);
   const [socketConnected, setSocketConnected] = useState(false);
 
+  const [page, setPage] = useState(1);
+  const [totalPage, setTotalPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false); // ✅ Add loading state
+
   const socketRef = useRef();
   const navigate = useNavigate();
   const location = useLocation();
-  const token = localStorage.getItem("token");
+  const scrollableDivRef = useRef(null);
 
+  const token = localStorage.getItem("token");
 
   const isChatPage = location.pathname.match(/^\/chat\/.+/);
   const isSubPage = location.pathname.includes("/profile") ||
@@ -45,34 +52,60 @@ const MainLayout = () => {
     };
   }, [token]);
 
+  const fetchContacts = async (pageNum) => {
+    if (loading) return; // ✅ Prevent multiple calls
+    setLoading(true);
 
-  useEffect(() => {
-    socketRef.current = io(API_BASE_URL, {
-      auth: { token },
-      transports: ["websocket"],
-    });
-    socketRef.current.on("getOnlineUsers", (users) => {
-      setOnlineUser(users);
-    });
-    return () => {
-      socketRef.current.disconnect();
-    };
-  }, [token]);
+    try {
+      const res = await axios.get(`${API_BASE_URL}/getAllContacts?page=${pageNum}&limit=20`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-  useEffect(() => {
-    const fetchContacts = async () => {
-      try {
-        const res = await axios.get(`${API_BASE_URL}/getAllContacts`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setContacts(res.data);
-      } catch (error) {
-        console.error("Error fetching contacts:", error);
+      console.log("Fetched page:", pageNum, "Data:", res.data); // ✅ Debug log
+
+      const newData = res.data.data;
+      const currentTotalPages = res.data.totalPage;
+      setTotalPage(currentTotalPages);
+
+      if (pageNum === 1) {
+        setContacts(newData);
+      } else {
+        setContacts((prev) => [...prev, ...newData]);
       }
-    };
-    fetchContacts();
+
+      // ✅ Check if more data exists
+      if (pageNum >= currentTotalPages) {
+        setHasMore(false);
+      } else {
+        setHasMore(true);
+      }
+    } catch (error) {
+      console.error("Error fetching contacts:", error);
+      setHasMore(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Initial load
+  useEffect(() => {
+    if (token) {
+      setPage(1);
+      setHasMore(true);
+      fetchContacts(1);
+    }
   }, [token]);
 
+  // ✅ Fetch next page function - fixed
+  const fetchNextPage = () => {
+    if (!loading && hasMore) {
+      setPage(prev => {
+        const nextPage = prev + 1;
+        fetchContacts(nextPage);  // ✅ Direct call with next page
+        return nextPage;
+      });
+    }
+  };
 
   return (
     <div className="w-screen h-screen flex relative overflow-hidden">
@@ -91,53 +124,82 @@ const MainLayout = () => {
           <h2 className="text-white font-medium text-sm">Dashboard</h2>
           <MdDashboard className="text-white text-lg" />
         </div>
+
         <div className="bg-[#075E54] px-4 py-4 flex items-center justify-between">
           <h1 className="text-white text-lg font-semibold">WhatsApp</h1>
         </div>
 
-        {/* Contacts */}
-        <div className="px-4 py-3 font-semibold flex justify-between">
-          <h2>Chats</h2>
-          <FaPlusCircle className="text-gray-500" />
-        </div>
-
-        {contacts.map((c) => {
-          const isOnline = onlineUser.includes(c._id);
-          return (
-            <div
-              key={c._id}
-              onClick={() => navigate(`/chat/${c._id}`)}
-              className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-200 border-b border-gray-100"
-            >
-              <div className="relative shrink-0">
-                <div className="w-12 h-12 rounded-full bg-[#075E54] text-white flex items-center justify-center font-medium text-lg overflow-hidden">
-                  {c.profilePic
-                    ? <img src={c.profilePic} className="w-full h-full object-cover" />
-                    : c.fullName?.charAt(0)}
-                </div>
-                {isOnline && (
-                  <span className="absolute bottom-0 right-0 w-3 h-3 bg-[#25D366] rounded-full border-2 border-white"></span>
-                )}
+        {/* Contacts - Fixed scroll container */}
+        <div
+          ref={scrollableDivRef}
+          id="scrollableDiv"
+          style={{
+            height: 'calc(100vh - 120px)', // ✅ Full height
+            overflow: 'auto',
+          }}
+        >
+          <InfiniteScroll
+            scrollableTarget={scrollableDivRef.current}
+            dataLength={contacts.length}
+            next={fetchNextPage}
+            hasMore={hasMore}
+            loader={
+              <div className="flex justify-center py-4">
+                <div className="w-6 h-6 border-4 border-gray-300 border-t-[#075E54] rounded-full animate-spin"></div>
+                <span className="ml-2 text-sm text-gray-500">Loading more contacts...</span>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex justify-between items-center">
-                  <p className="font-medium text-gray-900 text-sm">{c.fullName}</p>
-                  <p className="text-xs text-gray-400">{isOnline ? "now" : ""}</p>
-                </div>
-                <p className="text-xs text-gray-500 truncate mt-0.5">
-                  {isOnline ? "Online" : "Offline"}
-                </p>
-              </div>
+            }
+            endMessage={
+              <p className="text-center py-6 text-gray-400 text-xs font-bold uppercase tracking-widest">
+                No more contacts
+              </p>
+            }
+           
+          >
+            <div className="px-4 py-3 font-semibold flex justify-between sticky top-0 bg-gray-100 z-10">
+              <h2>Chats</h2>
+              <FaPlusCircle className="text-gray-500 cursor-pointer" />
             </div>
-          );
-        })}
+
+            {contacts.map((c) => {
+              const isOnline = onlineUser.includes(c._id);
+              return (
+                <div
+                  key={c._id}
+                  onClick={() => navigate(`/chat/${c._id}`)}
+                  className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-200 border-b border-gray-100"
+                >
+                  <div className="relative shrink-0">
+                    <div className="w-12 h-12 rounded-full bg-[#075E54] text-white flex items-center justify-center font-medium text-lg overflow-hidden">
+                      {c.profilePic
+                        ? <img src={c.profilePic} className="w-full h-full object-cover" />
+                        : c.fullName?.charAt(0)}
+                    </div>
+                    {isOnline && (
+                      <span className="absolute bottom-0 right-0 w-3 h-3 bg-[#25D366] rounded-full border-2 border-white"></span>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-center">
+                      <p className="font-medium text-gray-900 text-sm">{c.fullName}</p>
+                      <p className="text-xs text-gray-400">{isOnline ? "now" : ""}</p>
+                    </div>
+                    <p className="text-xs text-gray-500 truncate mt-0.5">
+                      {isOnline ? "Online" : "Offline"}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </InfiniteScroll>
+        </div>
       </div>
 
       {/* ─── Right Section ────────────────────────────── */}
       <div className={`
-  flex flex-col flex-1 bg-white overflow-hidden
-  ${(isChatPage || isSubPage) ? "flex" : "hidden md:flex"}
-`}>
+        flex flex-col flex-1 bg-white overflow-hidden
+        ${(isChatPage || isSubPage) ? "flex" : "hidden md:flex"}
+      `}>
         <Outlet context={{ socketRef, socketConnected }} />
       </div>
 

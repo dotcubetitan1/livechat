@@ -31,7 +31,7 @@ const ChatPage = () => {
   const [editText, setEditText] = useState("");
 
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  
+
   const longPressTimer = useRef(null);
 
   const fileInputRef = useRef(null);
@@ -45,7 +45,7 @@ const ChatPage = () => {
 
   useEffect(() => {
     if (userId) {
-      fetchUserDetails(userId);
+      fetchUserById(userId);
       fetchMessages(userId);
       fetchOnlineUsers(userId);
     }
@@ -132,14 +132,14 @@ const ChatPage = () => {
       console.error("Error fetching online user :", error);
     }
   };
-  const fetchUserDetails = async (id) => {
+  const fetchUserById = async (id) => {
     try {
       setLoading(true)
-      const res = await axios.get(`${API_BASE_URL}/getAllContacts`, {
+      const res = await axios.get(`${API_BASE_URL}/get-user/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const contact = res.data.find((c) => c._id === id);
-      setSelectedUser(contact);
+      console.log(res.data.data)
+      setSelectedUser(res.data.data);
     } catch (error) {
       console.error("Error fetching user details:", error);
     } finally {
@@ -312,7 +312,7 @@ const ChatPage = () => {
         prev.map((m) => m._id === msgId ? {
           ...m,
           reactions: [...m.reactions.filter((r) => r.userId !== user._id)]
-        }:m)
+        } : m)
       )
     } catch (error) {
 
@@ -338,8 +338,10 @@ const ChatPage = () => {
         <button onClick={() => navigate("/chat")} className="md:hidden text-white text-2xl mr-1">
           <IoArrowBackCircleOutline />
         </button>
-        <div className="w-9 h-9 rounded-full bg-white/20 text-white flex items-center justify-center font-medium text-sm shrink-0">
-          {selectedUser.fullName?.charAt(0)}
+        <div className="w-9 h-9 rounded-full bg-[#075E54] text-white flex items-center justify-center font-medium text-lg overflow-hidden">
+          {selectedUser
+            ? <img src={selectedUser.profilePic} className="w-full h-full object-cover" />
+            : selectedUser.fullName?.charAt(0)}
         </div>
         <div>
           <p className="text-white font-medium text-sm">{selectedUser.fullName}</p>

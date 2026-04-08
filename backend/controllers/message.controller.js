@@ -6,12 +6,39 @@ import sendPushNotification from "../services/notification.js"
 export const getAllContacts = async (req, res) => {
   try {
     const loggedInUserId = req.user._id;
-    const filteredUsers = await User.find({
-      _id: { $ne: loggedInUserId },
-    }).select("-password");
-    res.status(200).json(filteredUsers);
+    const page = parseInt(req.query.page) || 1
+    const limit = parseInt(req.query.limit) || 10
+    const skip = (page - 1) * limit
+ 
+    const [user, totalCount] = await Promise.all([
+      User.find({
+        _id: { $ne: loggedInUserId }
+      }).select("-password").skip(skip).limit(limit).sort({ createdAt: -1 }).lean(),
+      User.countDocuments({ _id: { $ne: loggedInUserId } })
+    ])
+    res.status(200).json({
+      data: user,
+      currentPage: page,
+      totalPage: Math.ceil(totalCount / limit),
+      totalUsers: totalCount
+    });
   } catch (error) {
     console.log("Error in getAllContacts:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+export const getUserById = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const user = await User.findById(userId).select("-password");
+    
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
+    res.status(200).json({ data: user });
+  } catch (error) {
+    console.log("Error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
