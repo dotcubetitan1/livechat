@@ -4,7 +4,7 @@ import User from "../models/User.js";
 export const socketAuthMiddleware = async (socket, next) => {
   try {
     const token = socket.handshake.headers?.token ||  socket.handshake.auth?.token;
-    console.log("socket token", socket.handshake.headers?.token)
+    // console.log("socket token", socket.handshake.headers?.token)
     if (!token) {
       return next(new Error("Unauthorized - No token provided"));
     }

@@ -8,7 +8,7 @@ export const initSocket = (server) => {
   io = new Server(server, {
     cors: {
       origin: "*",
-      credentials: false, 
+      credentials: false,
     },
   });
 
@@ -17,29 +17,38 @@ export const initSocket = (server) => {
   io.on("connection", (socket) => {
     console.log("User connected:", socket.user.fullName || socket.user.email);
 
-    const userId = socket.user._id.toString();;
-    socket.join(userId);
-    userSocketMap[userId] = socket.id;
-
+    const userId = socket.userId;
+    console.log(typeof userId , userId )
+    // Array initialize karein agar pehli baar login hai
+    if (!userSocketMap[userId]) {
+      userSocketMap[userId] = []
+    }
+    userSocketMap[userId].push(socket.id);
+    socket.join(userId)
+    console.log(`User ${socket.user.fullName} connected. Device count: ${userSocketMap[userId].length}`);
     console.log("Current online users:", Object.keys(userSocketMap));
 
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
     socket.on("disconnect", () => {
-      console.log("A user disconnected", socket.user.fullName);
-      delete userSocketMap[userId];
+      // Sirf wahi socket ID remove karein jo disconnect hui hai
+      userSocketMap[userId] = userSocketMap[userId].filter(id => id !== socket.id)
+
+      // Agar koi bhi device online nahi bacha, tabhi map se delete karein 
+      if (userSocketMap[userId].length === 0) {
+        delete userSocketMap[userId];
+        console.log(`User ${userId} fully disconnected from all devices.`);
+      }
       io.emit("getOnlineUsers", Object.keys(userSocketMap));
     });
   });
-
   return io;
 };
 
 export const getReceiverSocketId = (userId) => {
   const userIdString = userId.toString();
-  console.log("Looking for socket ID of user:", userIdString);
   console.log(" Available users:", Object.keys(userSocketMap));
-  return userSocketMap[userIdString];
+  return userSocketMap[userIdString] || [];
 };
 
 export const getIO = () => {
