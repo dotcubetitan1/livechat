@@ -6,6 +6,7 @@ import { FaPlusCircle } from "react-icons/fa";
 import { MdDashboard } from "react-icons/md";
 import { API_BASE_URL } from "./api/config";
 import InfiniteScroll from "react-infinite-scroll-component"
+import { ClipLoader } from "react-spinners";
 
 const MainLayout = () => {
   const [contacts, setContacts] = useState([]);
@@ -15,12 +16,11 @@ const MainLayout = () => {
   const [page, setPage] = useState(1);
   const [totalPage, setTotalPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const [loading, setLoading] = useState(false); 
+  const [loading, setLoading] = useState(false);
 
   const socketRef = useRef();
   const navigate = useNavigate();
   const location = useLocation();
-  const scrollableDivRef = useRef(null);
 
   const token = localStorage.getItem("token");
 
@@ -53,7 +53,7 @@ const MainLayout = () => {
   }, [token]);
 
   const fetchContacts = async (pageNum) => {
-    if (loading) return; 
+    if (loading) return;
     setLoading(true);
 
     try {
@@ -61,7 +61,7 @@ const MainLayout = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.log("Fetched page:", pageNum, "Data:", res.data); 
+      console.log("Fetched page:", pageNum, "Data:", res.data);
 
       const newData = res.data.data;
       const currentTotalPages = res.data.totalPage;
@@ -94,16 +94,14 @@ const MainLayout = () => {
     }
   }, [token]);
 
+  useEffect(() => {
+    if (page > 1) {
+      fetchContacts(page);
+    }
+  }, [page]);
   const fetchNextPage = () => {
-    if (!loading && hasMore) {
-      setPage(prev => {
-        const nextPage = prev + 1;
-        setTimeout(()=>{
-          fetchContacts(nextPage);  
-
-        }, 1000)
-        return nextPage;
-      });
+    if (!loading && hasMore && page < totalPage) {
+        setPage(prev => prev + 1);
     }
   };
 
@@ -133,7 +131,7 @@ const MainLayout = () => {
         <div
           id="scrollableDiv"
           style={{
-            height: 'calc(100vh - 120px)', 
+            height: 'calc(100vh - 120px)',
             overflow: 'auto',
           }}
         >
@@ -143,9 +141,8 @@ const MainLayout = () => {
             hasMore={hasMore}
             scrollableTarget="scrollableDiv"
             loader={
-              <div className="flex justify-center py-4">
-                <div className="w-6 h-6 border-4 border-gray-300 border-t-[#075E54] rounded-full animate-spin"></div>
-                <span className="ml-2 text-sm text-gray-500">Loading more contacts...</span>
+              <div className="w-full flex justify-center items-center py-4">
+                <ClipLoader size={50} color="#075E54" />
               </div>
             }
             endMessage={

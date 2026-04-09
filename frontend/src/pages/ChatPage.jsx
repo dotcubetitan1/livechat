@@ -338,8 +338,8 @@ const ChatPage = () => {
         <button onClick={() => navigate("/chat")} className="md:hidden text-white text-2xl mr-1">
           <IoArrowBackCircleOutline />
         </button>
-        <div className="w-9 h-9 rounded-full bg-[#075E54] text-white flex items-center justify-center font-medium text-lg overflow-hidden">
-          {selectedUser
+        <div className="w-9 h-9 rounded-full bg-[#ffffff] text-[#272626] flex items-center justify-center font-medium text-lg overflow-hidden">
+          {selectedUser?.profilePic
             ? <img src={selectedUser.profilePic} className="w-full h-full object-cover" />
             : selectedUser.fullName?.charAt(0)}
         </div>
