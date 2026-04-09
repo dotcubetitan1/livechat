@@ -15,7 +15,7 @@ const MainLayout = () => {
   const [page, setPage] = useState(1);
   const [totalPage, setTotalPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const [loading, setLoading] = useState(false); // ✅ Add loading state
+  const [loading, setLoading] = useState(false); 
 
   const socketRef = useRef();
   const navigate = useNavigate();
@@ -53,15 +53,15 @@ const MainLayout = () => {
   }, [token]);
 
   const fetchContacts = async (pageNum) => {
-    if (loading) return; // ✅ Prevent multiple calls
+    if (loading) return; 
     setLoading(true);
 
     try {
-      const res = await axios.get(`${API_BASE_URL}/getAllContacts?page=${pageNum}&limit=20`, {
+      const res = await axios.get(`${API_BASE_URL}/getAllContacts?page=${pageNum}&limit=10`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.log("Fetched page:", pageNum, "Data:", res.data); // ✅ Debug log
+      console.log("Fetched page:", pageNum, "Data:", res.data); 
 
       const newData = res.data.data;
       const currentTotalPages = res.data.totalPage;
@@ -73,7 +73,6 @@ const MainLayout = () => {
         setContacts((prev) => [...prev, ...newData]);
       }
 
-      // ✅ Check if more data exists
       if (pageNum >= currentTotalPages) {
         setHasMore(false);
       } else {
@@ -87,7 +86,6 @@ const MainLayout = () => {
     }
   };
 
-  // ✅ Initial load
   useEffect(() => {
     if (token) {
       setPage(1);
@@ -96,12 +94,14 @@ const MainLayout = () => {
     }
   }, [token]);
 
-  // ✅ Fetch next page function - fixed
   const fetchNextPage = () => {
     if (!loading && hasMore) {
       setPage(prev => {
         const nextPage = prev + 1;
-        fetchContacts(nextPage);  // ✅ Direct call with next page
+        setTimeout(()=>{
+          fetchContacts(nextPage);  
+
+        }, 1000)
         return nextPage;
       });
     }
@@ -131,18 +131,17 @@ const MainLayout = () => {
 
         {/* Contacts - Fixed scroll container */}
         <div
-          ref={scrollableDivRef}
           id="scrollableDiv"
           style={{
-            height: 'calc(100vh - 120px)', // ✅ Full height
+            height: 'calc(100vh - 120px)', 
             overflow: 'auto',
           }}
         >
           <InfiniteScroll
-            scrollableTarget={scrollableDivRef.current}
             dataLength={contacts.length}
             next={fetchNextPage}
             hasMore={hasMore}
+            scrollableTarget="scrollableDiv"
             loader={
               <div className="flex justify-center py-4">
                 <div className="w-6 h-6 border-4 border-gray-300 border-t-[#075E54] rounded-full animate-spin"></div>
@@ -154,7 +153,7 @@ const MainLayout = () => {
                 No more contacts
               </p>
             }
-           
+
           >
             <div className="px-4 py-3 font-semibold flex justify-between sticky top-0 bg-gray-100 z-10">
               <h2>Chats</h2>
