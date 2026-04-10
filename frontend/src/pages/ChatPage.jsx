@@ -338,7 +338,9 @@ const ChatPage = () => {
         <button onClick={() => navigate("/chat")} className="md:hidden text-white text-2xl mr-1">
           <IoArrowBackCircleOutline />
         </button>
-        <div className="w-9 h-9 rounded-full bg-[#ffffff] text-[#272626] flex items-center justify-center font-medium text-lg overflow-hidden">
+        <div 
+        onClick={()=>navigate("/media")}
+        className="w-9 h-9 rounded-full bg-[#ffffff] text-[#272626] flex items-center justify-center font-medium text-lg overflow-hidden">
           {selectedUser?.profilePic
             ? <img src={selectedUser.profilePic} className="w-full h-full object-cover" />
             : selectedUser.fullName?.charAt(0)}
@@ -585,7 +587,7 @@ const ChatPage = () => {
       )}
 
       {/* Input bar */}
-      <div className="bg-[#F0F0F0] px-2 py-2 flex items-center gap-2 border-t border-gray-200">
+      <div className="bg-[#F0F0F0] px-5 py-4 md:py-3 flex items-center gap-2 border-t border-gray-200">
         {showEmojiPicker && (
           <div className="absolute bottom-16 z-50 w-full md:w-auto ">
             <EmojiPicker

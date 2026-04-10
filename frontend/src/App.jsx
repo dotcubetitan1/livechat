@@ -5,6 +5,7 @@ import ChatPage from "./pages/ChatPage";
 import DashboardPage from "./pages/DashboardPage";
 import MainLayout from "./MainLayout";
 import ProfilePage from "./pages/ProfilePage";
+import AllMediaPage from "./pages/AllMediaPage"
 import { onMessage } from "firebase/messaging";
 import { getFCMToken, messaging } from "./config/firebase";
 import { useEffect } from "react";
@@ -58,6 +59,7 @@ function App() {
         <Route path="chat/:userId" element={<ChatPage />} />
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="profile" element={<ProfilePage />} />
+        <Route path="media" element={<AllMediaPage/>}/>
       </Route>
     </Routes>
   );

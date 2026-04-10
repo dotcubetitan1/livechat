@@ -84,7 +84,7 @@ const ProfilePage = () => {
   return (
     <div className="flex flex-col h-full bg-gray-100">
       <div className="bg-[#075E54] px-4 py-4 flex items-center gap-3">
-        <button onClick={() => navigate("/dashboard")} className=" text-white text-[28px]">
+        <button onClick={() => navigate("/chat")} className=" text-white text-[28px]">
           <IoArrowBackCircleOutline />
         </button>
       </div>

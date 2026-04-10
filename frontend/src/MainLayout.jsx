@@ -7,6 +7,7 @@ import { MdDashboard } from "react-icons/md";
 import { API_BASE_URL } from "./api/config";
 import InfiniteScroll from "react-infinite-scroll-component"
 import { ClipLoader } from "react-spinners";
+import { CgProfile } from "react-icons/cg";
 
 const MainLayout = () => {
   const [contacts, setContacts] = useState([]);
@@ -96,12 +97,14 @@ const MainLayout = () => {
 
   useEffect(() => {
     if (page > 1) {
-      fetchContacts(page);
+      setTimeout(()=>{
+        fetchContacts(page);
+      },1000)
     }
   }, [page]);
   const fetchNextPage = () => {
     if (!loading && hasMore && page < totalPage) {
-        setPage(prev => prev + 1);
+      setPage(prev => prev + 1);
     }
   };
 
@@ -112,26 +115,30 @@ const MainLayout = () => {
       <div className={`
         bg-gray-100 p-3 transition-all duration-300
         w-full md:w-1/4 lg:w-1/5 shrink-0
-        ${(isChatPage || isSubPage) ? "hidden md:block" : "block"}
+        ${(isChatPage || isSubPage) ? "md:block" : "block"}
       `}>
         {/* Dashboard Button */}
-        <div
+        {/* <div
           onClick={() => navigate("/dashboard")}
           className="flex items-center justify-between px-4 py-3 bg-[#075E54] rounded-xl cursor-pointer mb-3"
         >
           <h2 className="text-white font-medium text-sm">Dashboard</h2>
           <MdDashboard className="text-white text-lg" />
-        </div>
+        </div> */}
 
         <div className="bg-[#075E54] px-4 py-4 flex items-center justify-between">
           <h1 className="text-white text-lg font-semibold">WhatsApp</h1>
+          <div onClick={() => navigate("/profile")} className="text-white/80 cursor-pointer text-2xl">
+            <CgProfile />
+
+          </div>
         </div>
 
         {/* Contacts - Fixed scroll container */}
         <div
           id="scrollableDiv"
           style={{
-            height: 'calc(100vh - 120px)',
+            height: 'calc(100vh - 200px)',
             overflow: 'auto',
           }}
         >
