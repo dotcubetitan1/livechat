@@ -589,7 +589,7 @@ const ChatPage = () => {
       )}
 
       {/* Input bar */}
-      <div className="bg-[#F0F0F0] px-5 py-4 md:py-3 flex items-center gap-2 border-t border-gray-200">
+      <div className="bg-[#F0F0F0] px-3 py-4 md:py-3 flex items-center gap-2 border-t border-gray-200">
         {showEmojiPicker && (
           <div className="absolute bottom-16 z-50 w-full md:w-auto ">
             <EmojiPicker
@@ -637,7 +637,7 @@ const ChatPage = () => {
         <input value={text} onChange={e => setText(e.target.value)}
           onKeyDown={e => { if (e.key === "Enter" && !sending) handleSend(); }}
           placeholder="Message..."
-          className="flex-1 bg-white border border-gray-200 rounded-full px-4 py-2 text-sm outline-none" />
+          className="flex-1 bg-white border border-gray-200 rounded-full px-4 py-2 text-sm outline-none w-40" />
 
         <button onMouseDown={startRecording} onMouseUp={stopRecording} onMouseLeave={stopRecording}
           className={`w-10 h-10 rounded-full flex items-center justify-center transition-all
@@ -648,7 +648,7 @@ const ChatPage = () => {
         <button onClick={handleSend} disabled={sending}
           className={`w-10 h-10 rounded-full flex items-center justify-center text-white transition
       ${sending ? "bg-gray-400" : "bg-[#00BFA5]"}`}>
-          <svg width="18" height="18" fill="white" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" /></svg>
+          <svg width="22" height="18" fill="white" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" /></svg>
         </button>
       </div>
     </>

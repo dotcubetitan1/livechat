@@ -5,6 +5,7 @@ import { API_BASE_URL } from "../api/config.js";
 import { useNavigate } from "react-router";
 import { signInWithGoogle } from "../config/firebase.js"
 import toast from "react-hot-toast";
+import { getFCMToken } from "../config/firebase.js"
 
 const SignUpPage = () => {
   const navigate = useNavigate();
