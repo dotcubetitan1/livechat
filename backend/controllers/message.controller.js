@@ -9,7 +9,7 @@ export const getAllContacts = async (req, res) => {
     const page = parseInt(req.query.page) || 1
     const limit = parseInt(req.query.limit) || 10
     const skip = (page - 1) * limit
- 
+
     const [user, totalCount] = await Promise.all([
       User.find({
         _id: { $ne: loggedInUserId }
@@ -31,11 +31,11 @@ export const getUserById = async (req, res) => {
   try {
     const userId = req.params.id;
     const user = await User.findById(userId).select("-password");
-    
+
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    
+
     res.status(200).json({ data: user });
   } catch (error) {
     console.log("Error:", error);
@@ -195,7 +195,17 @@ export const updateMessage = async (req, res) => {
 };
 export const getAllMedia = async (req, res) => {
   try {
-    const messages = await Message.find().lean();
+    const myId = req.user._id;
+    const { userId } = req.params;
+
+    const messages = await Message.find({
+      $or: [
+        { senderId: myId, receiverId: userId },
+        { senderId: userId, receiverId: myId }
+      ],
+      deletedForEveryone: { $ne: true },
+      deletedFor: { $ne: myId }
+    }).lean();
 
     const allVideos = [...new Set(messages.flatMap(m => m.videos || []))];
     const allImages = [...new Set(messages.flatMap(m => m.images || []))];
@@ -247,25 +257,25 @@ export const messageDeleteByUser = async (req, res) => {
 
       return res.status(200).json({
         success: true,
-        message: "Message deleted for you",
+        message: "Message deleted successfully",
         data: message,
       });
     }
-    console.log("senderId", message.senderId)
-    console.log("receiverId", message.receiverId)
+    // console.log("senderId", message.senderId)
+    // console.log("receiverId", message.receiverId)
     // DELETE FOR EVERYONE — WhatsApp jaisi time limit (60 min)
     if (deleteType === "foreveryone") {
       // Sirf sender delete kar sakta hai
       if (!message.senderId.equals(userId)) {
         return res.status(400).json({
-          message: "Only sender can delete message for everyone",
+          message: "You can only delete your own messages",
         });
       }
 
       // Already deleted check
       if (message.deletedForEveryone) {
         return res.status(400).json({
-          message: "Message already deleted for everyone",
+          message: "Message already deleted",
         });
       }
 
@@ -273,10 +283,9 @@ export const messageDeleteByUser = async (req, res) => {
       const now = new Date();
       const sentAt = new Date(message.createdAt);
       const diffInMinutes = (now - sentAt) / (1000 * 60);
-      console.log(diffInMinutes)
       if (diffInMinutes > 60) {
         return res.status(400).json({
-          message: "Cannot delete for everyone after 60 minutes",
+          message: "Cannot delete message after 1 hour",
         });
       }
 
@@ -307,18 +316,20 @@ export const messageDeleteByUser = async (req, res) => {
 
       return res.status(200).json({
         success: true,
-        message: "Message deleted for everyone",
+        message: "Message deleted successfully",
         data: message,
       });
     }
-
-    // Invalid deleteType
     return res.status(400).json({
-      message: "Invalid deleteType. Use 'forme' or 'foreveryone'",
+      success: false,
+      message: "Invalid request",
     });
   } catch (error) {
-    console.error("Error in messageDeleteByUser:", error);
-    res.status(500).json({ message: "Internal server error" });
+    // console.error("Error in messageDeleteByUser:", error);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong"
+    });
   }
 };
 export const addEmoji = async (req, res) => {

@@ -26,9 +26,8 @@ const MainLayout = () => {
   const token = localStorage.getItem("token");
 
   const isChatPage = location.pathname.match(/^\/chat\/.+/);
-  const isSubPage = location.pathname.includes("/profile") ||
-    location.pathname.includes("/dashboard");
-
+  const isProfilePage = location.pathname.includes("/profile"); 
+ const hideSidebarOnMobile = isChatPage || isProfilePage
   useEffect(() => {
     if (!token) return;
 
@@ -56,14 +55,10 @@ const MainLayout = () => {
   const fetchContacts = async (pageNum) => {
     if (loading) return;
     setLoading(true);
-
     try {
       const res = await axios.get(`${API_BASE_URL}/getAllContacts?page=${pageNum}&limit=10`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      console.log("Fetched page:", pageNum, "Data:", res.data);
-
       const newData = res.data.data;
       const currentTotalPages = res.data.totalPage;
       setTotalPage(currentTotalPages);
@@ -97,9 +92,9 @@ const MainLayout = () => {
 
   useEffect(() => {
     if (page > 1) {
-      setTimeout(()=>{
+      setTimeout(() => {
         fetchContacts(page);
-      },1000)
+      }, 1000)
     }
   }, [page]);
   const fetchNextPage = () => {
@@ -115,7 +110,7 @@ const MainLayout = () => {
       <div className={`
         bg-gray-100 p-3 transition-all duration-300
         w-full md:w-1/4 lg:w-1/5 shrink-0
-        ${(isChatPage || isSubPage) ? "md:block" : "block"}
+        ${hideSidebarOnMobile ? " hidden md:block" : "block"}
       `}>
         {/* Dashboard Button */}
         {/* <div
@@ -128,7 +123,11 @@ const MainLayout = () => {
 
         <div className="bg-[#075E54] px-4 py-4 flex items-center justify-between">
           <h1 className="text-white text-lg font-semibold">WhatsApp</h1>
-          <div onClick={() => navigate("/profile")} className="text-white/80 cursor-pointer text-2xl">
+          <div
+            onClick={() => {
+              navigate("/profile")
+            }}
+            className="text-white/80 cursor-pointer text-2xl " >
             <CgProfile />
 
           </div>
@@ -138,7 +137,7 @@ const MainLayout = () => {
         <div
           id="scrollableDiv"
           style={{
-            height: 'calc(100vh - 200px)',
+            height: 'calc(100vh - 160px)',
             overflow: 'auto',
           }}
         >
@@ -201,7 +200,7 @@ const MainLayout = () => {
       {/* ─── Right Section ────────────────────────────── */}
       <div className={`
         flex flex-col flex-1 bg-white overflow-hidden
-        ${(isChatPage || isSubPage) ? "flex" : "hidden md:flex"}
+        ${hideSidebarOnMobile ? "flex" : "hidden md:flex"}
       `}>
         <Outlet context={{ socketRef, socketConnected }} />
       </div>

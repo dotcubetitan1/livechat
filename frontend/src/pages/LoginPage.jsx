@@ -4,18 +4,21 @@ import axios from "axios";
 import { API_BASE_URL } from "../api/config.js";
 import { getFCMToken } from "../config/firebase.js"
 import { signInWithGoogle } from "../config/firebase.js"
+import toast from "react-hot-toast";
 
 const LoginPage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [formData, setFormData] = useState({ email: "", password: "" });
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleLogin = async () => {
+    if (!formData.email || !formData.password) {
+      toast.error("Please enter email and password");
+      return;
+    }
     try {
-      setError("");
       setLoading(true);
       const res = await axios.post(`${API_BASE_URL}/login`, formData);
       const token = res.data.data.token;
@@ -27,28 +30,38 @@ const LoginPage = () => {
           headers: { Authorization: `Bearer ${token}` }
         });
       }
+      toast.success(res.data.message)
       navigate("/chat");
     } catch (error) {
-      setError(error.response?.data?.message || "Login failed");
       setLoading(false);
+      toast.error(error.response?.data?.message || "Login failed")
     }
   };
   const handleGoogleLogin = async () => {
     try {
       const googleUser = await signInWithGoogle();
-      console.log(googleUser)
+      // console.log(googleUser)
       const res = await axios.post(`${API_BASE_URL}/socialLogin`, {
         email: googleUser.email,
         fullName: googleUser.displayName,
         googleId: googleUser.uid,
         profilePic: googleUser.photoURL
       })
-      console.log(res);
+      // console.log(res);
       localStorage.setItem("token", res.data.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.data.user));
+      const token = res.data.data.token;
+      const fcmToken = await getFCMToken();
+      if (fcmToken) {
+        await axios.post(`${API_BASE_URL}/update-fcm-token`, { fcmToken }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+      toast.success("Login successful");
       navigate("/chat");
     } catch (error) {
       console.error("Google login error:", error);
+      toast.error(error.response?.data?.message || "Google login failed. Please try again")
     }
   }
 
@@ -86,9 +99,6 @@ const LoginPage = () => {
               className="border border-gray-300 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#00BFA5] transition"
             />
           </div>
-
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-
           <button
             onClick={handleLogin} disabled={loading}
             className="bg-[#075E54] text-white rounded-full py-3 text-sm font-medium mt-2 disabled:opacity-70 flex items-center justify-center"

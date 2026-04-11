@@ -2,7 +2,7 @@ import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import SignUpPage from "./pages/SignUpPage";
 import LoginPage from "./pages/LoginPage";
 import ChatPage from "./pages/ChatPage";
-import DashboardPage from "./pages/DashboardPage";
+// import DashboardPage from "./pages/DashboardPage";
 import MainLayout from "./MainLayout";
 import ProfilePage from "./pages/ProfilePage";
 import AllMediaPage from "./pages/AllMediaPage"
@@ -57,9 +57,9 @@ function App() {
       <Route path="/" element={<MainLayout />}>
         <Route path="chat" element={<div className="md:flex hidden items-center justify-center h-screen font-semibold">Select user to start chat</div>} />
         <Route path="chat/:userId" element={<ChatPage />} />
-        <Route path="dashboard" element={<DashboardPage />} />
+        {/* <Route path="dashboard" element={<DashboardPage />} /> */}
         <Route path="profile" element={<ProfilePage />} />
-        <Route path="media" element={<AllMediaPage/>}/>
+        <Route path="media/:userId" element={<AllMediaPage/>}/>
       </Route>
     </Routes>
   );

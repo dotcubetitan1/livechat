@@ -3,6 +3,8 @@ import { Link } from "react-router";
 import axios from "axios";
 import { API_BASE_URL } from "../api/config.js";
 import { useNavigate } from "react-router";
+import { signInWithGoogle } from "../config/firebase.js"
+import toast from "react-hot-toast";
 
 const SignUpPage = () => {
   const navigate = useNavigate();
@@ -12,16 +14,50 @@ const SignUpPage = () => {
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSignup = async () => {
+    if (!formData.fullName || !formData.email || !formData.password) {
+      toast.error("Please fill all fields");
+      return;
+    }
+    if (formData.password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
     try {
       setLoading(true);
-      await axios.post(`${API_BASE_URL}/signup`, formData);
+      const res = await axios.post(`${API_BASE_URL}/signup`, formData);
+      toast.success(res.data.message)
       navigate("/login");
     } catch (error) {
-      console.log(error);
       setLoading(false);
+      toast.error(error.response?.data?.message || "Signup failed. Please try again")
     }
   };
-
+  const handleGoogleLogin = async () => {
+    try {
+      const googleUser = await signInWithGoogle();
+      // console.log(googleUser)
+      const res = await axios.post(`${API_BASE_URL}/socialLogin`, {
+        email: googleUser.email,
+        fullName: googleUser.displayName,
+        googleId: googleUser.uid,
+        profilePic: googleUser.photoURL
+      })
+      localStorage.setItem("token", res.data.data.token);
+      localStorage.setItem("user", JSON.stringify(res.data.data.user));
+      const token = res.data.data.token;
+      const fcmToken = await getFCMToken();
+      if (fcmToken) {
+        await axios.post(`${API_BASE_URL}/update-fcm-token`, { fcmToken }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+      toast.success("Login successful");
+      navigate("/chat");
+    } catch (error) {
+      console.error("Google login error:", error);
+      toast.error(error.response?.data?.message || "Google login failed. Please try again")
+    }
+  }
   return (
     <div className="w-screen h-screen flex flex-col items-center justify-center bg-gray-100">
       <div className="w-full bg-[#075E54] py-8 flex flex-col items-center justify-center">
@@ -70,6 +106,14 @@ const SignUpPage = () => {
           Already have an account?{" "}
           <Link to="/login" className="text-[#00BFA5] font-medium">Sign in</Link>
         </p>
+
+        <button
+          onClick={handleGoogleLogin}
+          className=" w-full flex gap-2 justify-center items-center py-2.5 mt-3 border border-gray-300 rounded-full hover:bg-gray-50 transition "
+        >
+          <img src="https://www.google.com/favicon.ico" className="w-5 h-5" />
+          <span className="text-sm text-gray-700 font-medium">Continue with Google</span>
+        </button>
       </div>
     </div>
   );

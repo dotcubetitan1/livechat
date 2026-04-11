@@ -7,6 +7,8 @@ import { FaMicrophone } from "react-icons/fa";
 import { IoArrowBackCircleOutline } from "react-icons/io5";
 import EmojiPicker from "emoji-picker-react"
 import { BsEmojiSmile } from "react-icons/bs";
+import toast from "react-hot-toast";
+import { Link } from "react-router-dom";
 
 const ChatPage = () => {
   const { userId } = useParams();
@@ -138,7 +140,7 @@ const ChatPage = () => {
       const res = await axios.get(`${API_BASE_URL}/get-user/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      console.log(res.data.data)
+      // console.log(res.data.data)
       setSelectedUser(res.data.data);
     } catch (error) {
       console.error("Error fetching user details:", error);
@@ -159,15 +161,15 @@ const ChatPage = () => {
   const handleDelete = async (deleteType) => {
     setShowActionMenu(false);
     try {
-      await axios.post(`${API_BASE_URL}/delete-message/${selectedMsg._id}`,
+      const res = await axios.post(`${API_BASE_URL}/delete-message/${selectedMsg._id}`,
         { deleteType },
         { headers: { Authorization: `Bearer ${token}` } }
       )
-
+      console.log(res)
+      toast.success(res.data.message);
     } catch (error) {
-      const msg = error.message
-      alert(msg)
-      fetchMessages(userId)
+      toast.error(error.response?.data?.message);
+      console.log(error)
     } finally {
       setShowActionMenu(false);
       setSelectedMsg(null);
@@ -335,16 +337,16 @@ const ChatPage = () => {
     <>
       {/* Header */}
       <div className="px-4 py-3 bg-[#075E54] flex items-center gap-3">
-        <button onClick={() => navigate("/chat")} className="md:hidden text-white text-2xl mr-1">
+        <button onClick={() => navigate("/chat")} className="md:hidden text-white text-2xl mr-1 p-2 -m-2">
           <IoArrowBackCircleOutline />
         </button>
-        <div 
-        onClick={()=>navigate("/media")}
-        className="w-9 h-9 rounded-full bg-[#ffffff] text-[#272626] flex items-center justify-center font-medium text-lg overflow-hidden">
+        <Link
+          to={`/media/${userId}`}
+          className="w-9 h-9 rounded-full bg-[#ffffff] text-[#272626] flex items-center justify-center font-medium text-lg overflow-hidden cursor-pointer " >
           {selectedUser?.profilePic
             ? <img src={selectedUser.profilePic} className="w-full h-full object-cover" />
             : selectedUser.fullName?.charAt(0)}
-        </div>
+        </Link>
         <div>
           <p className="text-white font-medium text-sm">{selectedUser.fullName}</p>
           <p className={`text-xs ${onlineUser.includes(userId) ? "text-green-300" : "text-white/50"}`}>

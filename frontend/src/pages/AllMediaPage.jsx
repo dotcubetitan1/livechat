@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../api/config";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { IoArrowBackCircleOutline } from "react-icons/io5";
 
 const AllMediaPage = () => {
+   const { userId } = useParams();
   const [activeTab, setActiveTab] = useState("images");
   const [allMedia, setAllMedia] = useState({ allVideo: [], allImage: [] });
   const [loading, setLoading] = useState(true);
@@ -16,9 +17,12 @@ const AllMediaPage = () => {
     const fetchAllMedia = async () => {
       try {
         setLoading(true)
-        const res = await axios.get(`${API_BASE_URL}/getAllMedia`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await axios.get(
+          `${API_BASE_URL}/getAllMedia/${userId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         setAllMedia(res.data);
       } catch (err) {
         console.error("Error fetching media:", err);
@@ -27,7 +31,7 @@ const AllMediaPage = () => {
       }
     };
     fetchAllMedia();
-  }, [token]);
+  }, [userId ,token]);
 
   if (loading) {
     return <div className="flex justify-center items-center h-full">
@@ -38,7 +42,7 @@ const AllMediaPage = () => {
   return (
     <div className="flex flex-col bg-white h-full">
       <div className="bg-[#075E54] px-4 py-4 flex items-center gap-3">
-        <button onClick={() => navigate("/chat")} className="md:hidden text-white text-2xl">
+        <button onClick={() => navigate(-1)} className="md:hidden text-white text-2xl">
           <IoArrowBackCircleOutline />
         </button>
         <h1 className="text-white font-medium flex-1">My Media</h1>

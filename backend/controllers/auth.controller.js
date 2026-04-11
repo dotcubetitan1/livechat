@@ -16,7 +16,7 @@ export const signup = async (req, res) => {
       password,
     });
     res.status(201).json({
-      message: "new user create success",
+      message: "Account created successfully",
       data: { user: newUser },
     });
   } catch (error) {
@@ -40,7 +40,7 @@ export const login = async (req, res) => {
       { expiresIn: "7d" },
     );
     res.status(200).json({
-      message: "user login success",
+      message: "login successFully",
       data: { token, user },
     });
   } catch (error) {
