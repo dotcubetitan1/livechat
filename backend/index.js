@@ -6,6 +6,7 @@ import { connectDB } from "./lib/db.js";
 import authRoutes from "./routes/auth.route.js";
 import messageRoutes from "./routes/message.route.js";
 import { initSocket } from "./lib/socket.js";
+import groupRoutes from "./routes/group.route.js";
 
 dotenv.config()
 
@@ -13,19 +14,20 @@ const app = express()
 const PORT = process.env.PORT || 4000
 
 app.use(cors({
-  origin:"*",
-  credentials:true
+  origin: "*",
+  credentials: true
 }));
 
 app.use(express.json());
 
 app.use(authRoutes);
 app.use(messageRoutes);
+app.use("/groups", groupRoutes)
 
 app.get("/", (req, res) => {
-  res.json({ 
+  res.json({
     message: "Server is running!",
-    status: "OK" 
+    status: "OK"
   });
 });
 

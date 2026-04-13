@@ -49,9 +49,14 @@ const messageSchema = mongoose.Schema(
           type: String
         }
       }
-    ]
-
+    ],
+    groupId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Group"
+    }
   },
+
+
   { timestamps: true },
 );
 const Message = mongoose.model("Message", messageSchema);

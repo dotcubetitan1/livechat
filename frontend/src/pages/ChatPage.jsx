@@ -340,13 +340,14 @@ const ChatPage = () => {
         <button onClick={() => navigate("/chat")} className="md:hidden text-white text-2xl mr-1 p-2 -m-2">
           <IoArrowBackCircleOutline />
         </button>
-        <Link
-          to={`/media/${userId}`}
+        <div
+        onClick={() => navigate(`/media/${userId}`)}
+          // to={`/media/${userId}`}
           className="w-9 h-9 rounded-full bg-[#ffffff] text-[#272626] flex items-center justify-center font-medium text-lg overflow-hidden cursor-pointer " >
           {selectedUser?.profilePic
             ? <img src={selectedUser.profilePic} className="w-full h-full object-cover" />
             : selectedUser.fullName?.charAt(0)}
-        </Link>
+        </div>
         <div>
           <p className="text-white font-medium text-sm">{selectedUser.fullName}</p>
           <p className={`text-xs ${onlineUser.includes(userId) ? "text-green-300" : "text-white/50"}`}>

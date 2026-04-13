@@ -1,4 +1,5 @@
 import { getReceiverSocketId, getIO, userSocketMap } from "../lib/socket.js";
+import Group from "../models/Group.js";
 import Message from "../models/Message.js";
 import User from "../models/User.js";
 import sendPushNotification from "../services/notification.js"
@@ -87,7 +88,6 @@ export const sendMessage = async (req, res) => {
         audioUrl.push(file.path);
       }
     });
-
     const newMessage = await Message.create({
       senderId,
       receiverId,
@@ -95,7 +95,7 @@ export const sendMessage = async (req, res) => {
       images: imageUrl,
       videos: videoUrl,
       audios: audioUrl,
-      location: lat && lng ? { lat, lng } : null
+      location: lat && lng ? { lat, lng } : null,
     });
 
     const receiver = await User.findById(receiverId)
@@ -138,12 +138,13 @@ export const sendMessage = async (req, res) => {
     }
     const io = getIO();
     io.to(receiverId.toString()).emit("newMessage", newMessage);
+
     console.log(`Message sent to room: ${receiverId}`);
 
     // Sender ko bhejo (Doosre devices/tabs ke liye)
     // io.to(senderId.toString()).emit("newMessage", newMessage);
 
-    res.status(201).json(newMessage);
+    res.status(200).json(newMessage);
   } catch (error) {
     console.error("Error in sendMessage:", error);
     res.status(500).json({ message: "server error", error });
