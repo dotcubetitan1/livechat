@@ -114,7 +114,7 @@ export const getGroupMessage = async (req, res) => {
         const messages = await Message.find({
             groupId: groupId,
             deletedForEveryone: { $ne: true }
-        }).select("senderId text images videos audios location deletedFor deletedForEveryone isEdited").lean().sort({ createdAt: 1 });
+        }).select("senderId text images videos audios location deletedFor deletedForEveryone isEdited createdAt").populate("senderId", "fullName profilePic").lean().sort({ createdAt: 1 });
         res.status(200).json({
             success: true,
             message: "Get message",

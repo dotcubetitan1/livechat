@@ -31,9 +31,11 @@ const MainLayout = () => {
 
   const token = localStorage.getItem("token");
 
-  const isChatPage = location.pathname.match(/^\/chat\/.+/);
-  const isProfilePage = location.pathname.includes("/profile");
-  const hideSidebarOnMobile = isChatPage || isProfilePage
+const isDetailPage = location.pathname.match(/^\/(chat|group|media)\/.+/);
+const isProfilePage = location.pathname.includes("/profile");
+
+const hideSidebarOnMobile = isDetailPage || isProfilePage;
+
   useEffect(() => {
     if (!token) return;
 

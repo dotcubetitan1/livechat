@@ -14,20 +14,18 @@ const MessagesArea = ({ groupId, socketRef, socketConnected, setPreview, message
   const user = JSON.parse(localStorage.getItem("user"));
   const isFirstLoad = useRef(true);
 
-  // Fetch messages - Initial load
   const fetchMessages = async (id) => {
     try {
       const res = await axios.get(`${API_BASE_URL}/groups/group-messages/${groupId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      // console.log(res)
-      setMessages(res.data.data); 
+      console.log(res)
+      setMessages(res.data.data);
     } catch (error) {
       console.error("Error fetching messages:", error);
     }
   };
 
-  // Delete message
   const handleDelete = async (deleteType) => {
     setShowActionMenu(false);
     try {
@@ -39,7 +37,7 @@ const MessagesArea = ({ groupId, socketRef, socketConnected, setPreview, message
       if (deleteType === "forme") {
         setMessages((prev) => prev.filter((m) => m._id !== selectedMsg._id));
       } else {
-        setMessages((prev) => prev.map((m) => 
+        setMessages((prev) => prev.map((m) =>
           m._id === selectedMsg._id ? { ...m, deletedForEveryone: true, text: "", images: [], videos: [] } : m
         ));
       }
@@ -65,25 +63,18 @@ const MessagesArea = ({ groupId, socketRef, socketConnected, setPreview, message
         { headers: { Authorization: `Bearer ${token}` } }
       );
     } catch (error) {
-      const msg = error.response?.data?.message || error.message;
-      alert(msg);
-      // fetchMessages(groupId);
+      toast.error(error.response?.data?.message);
     }
   };
-
-  // Press handlers
   const handlePressStart = (msg) => {
     longPressTimer.current = setTimeout(() => {
       setSelectedMsg(msg);
       setShowActionMenu(true);
     }, 500);
   };
-
   const handlePressEnd = () => {
     clearTimeout(longPressTimer.current);
   };
-
-  // Socket listeners
   useEffect(() => {
     if (groupId) {
       fetchMessages(groupId);
@@ -94,9 +85,6 @@ const MessagesArea = ({ groupId, socketRef, socketConnected, setPreview, message
     if (!socketConnected || !socketRef?.current) return;
 
     const handleNewMessage = (msg) => {
-      // const senderIdOfIncomingMsg = msg.senderId?.toString();
-      // const receiverIdOfIncomingMsg = msg.receiverId?.toString();
-      // const currentChatWith = userId?.toString();
       if (msg.groupId === groupId) {
         setMessages((prev) => {
           if (prev.some(m => m._id === msg._id)) return prev;
@@ -128,9 +116,8 @@ const MessagesArea = ({ groupId, socketRef, socketConnected, setPreview, message
       socketRef.current.off("messageDeleted", handleMessageDeleted);
       socketRef.current.off("messageUpdated", handleMessageUpdated);
     };
-  }, [groupId, socketConnected, socketRef, setMessages]); 
+  }, [groupId, socketConnected, socketRef, setMessages]);
 
-  // Auto scroll
   useEffect(() => {
     if (!bottomRef.current || messages.length === 0) return;
     if (isFirstLoad.current) {
@@ -141,10 +128,8 @@ const MessagesArea = ({ groupId, socketRef, socketConnected, setPreview, message
     }
   }, [messages]);
 
-  // Message bubble component
   const MessageBubble = ({ msg }) => {
-    const isMe = msg.senderId?.toString() === user._id.toString();
-    
+    const isMe = (msg.senderId._id || msg.senderId) === user._id;
     return (
       <div
         className={`flex ${isMe ? "justify-end" : "justify-start"}`}
@@ -162,7 +147,10 @@ const MessagesArea = ({ groupId, socketRef, socketConnected, setPreview, message
             <>
               {msg.text && (
                 <div>
-                  <p className="text-gray-800">{msg.text}</p>
+                  {!isMe && (<p className="text-xs font-semibold text-[#075E54]">{msg.senderId?.fullName}</p>)}
+                  <p className="text-gray-800">
+                    {msg.text}
+                  </p>
                   {msg.isEdited && (
                     <span className="text-[10px] text-gray-400 ml-1">edited</span>
                   )}
