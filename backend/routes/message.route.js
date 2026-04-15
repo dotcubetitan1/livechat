@@ -19,9 +19,9 @@ router.get("/getAllContacts", verifyToken, getAllContacts);
 router.get("/get-user/:id", verifyToken, getUserById);
 router.get("/getMessagesByUserId/:id", verifyToken, getMessagesByUserId);
 router.post("/sendMessage/:id", verifyToken, upload.array("images"), sendMessage);
-router.post("/update-message/:id", verifyToken, updateMessage);
 router.get("/getAllMedia/:userId", verifyToken, getAllMedia);
 router.get("/getOnlineUsers", verifyToken, getOnlineUsers)
+router.post("/update-message/:id", verifyToken, updateMessage);
 router.post("/delete-message/:messageId", verifyToken, messageDeleteByUser);
 router.post("/message-reaction/:messageId", verifyToken, addEmoji)
 

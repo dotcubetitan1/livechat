@@ -7,14 +7,16 @@ import sendPushNotification from "../services/notification.js"
 export const getAllContacts = async (req, res) => {
   try {
     const loggedInUserId = req.user._id;
+    const { search } = req.query;
     const page = parseInt(req.query.page) || 1
     const limit = parseInt(req.query.limit) || 10
     const skip = (page - 1) * limit
-
+    let query = { _id: { $ne: loggedInUserId } };
+    if (search) {
+      query.fullName = { $regex: search, $options: "i" };
+    }
     const [user, totalCount] = await Promise.all([
-      User.find({
-        _id: { $ne: loggedInUserId }
-      }).select("-password").skip(skip).limit(limit).sort({ createdAt: -1 }).lean(),
+      User.find(query).select("-password").skip(skip).limit(limit).sort({ createdAt: -1 }).lean(),
       User.countDocuments({ _id: { $ne: loggedInUserId } })
     ])
     res.status(200).json({
@@ -150,50 +152,6 @@ export const sendMessage = async (req, res) => {
     res.status(500).json({ message: "server error", error });
   }
 };
-export const updateMessage = async (req, res) => {
-  try {
-    const { id: messageId } = req.params;
-    const { text, lat, lng } = req.body;
-    const userId = req.user._id;
-    const message = await Message.findById({ _id: messageId })
-    if (!message) {
-      return res.status(404).json({ message: "Message not found" });
-    }
-    if (!message.senderId.equals(userId)) {
-      return res.status(400).json({ message: "You can only edit your own messages" });
-    }
-
-    if (text !== undefined) {
-      message.text = text;
-      message.isEdited = true;
-    }
-
-    if (lat && lng) {
-      message.location = { lat, lng };
-      message.isEdited = true;
-    }
-    const updatedMessage = await message.save()
-    const io = getIO();
-    const payload = {
-      messageId: updatedMessage._id,
-      text: updatedMessage.text,
-      location: updatedMessage.location,
-      isEdited: updatedMessage.isEdited
-    };
-
-    io.to(updatedMessage.receiverId.toString()).emit("messageUpdated", payload);
-    console.log(`update message sent for receiver:${updatedMessage.receiverId}`);
-
-    res.status(200).json({
-      success: true,
-      message: "Message updated successfully",
-      data: updatedMessage,
-    });
-  } catch (error) {
-    console.error("Error in sendMessage:", error);
-    res.status(500).json({ message: "server error", error });
-  }
-};
 export const getAllMedia = async (req, res) => {
   try {
     const myId = req.user._id;
@@ -229,6 +187,60 @@ export const getOnlineUsers = async (req, res) => {
     res.status(500).json({ message: "error.message" });
   }
 }
+export const updateMessage = async (req, res) => {
+  try {
+    const { id: messageId } = req.params;
+    const { text, lat, lng } = req.body;
+    const userId = req.user._id;
+    const message = await Message.findById({ _id: messageId })
+    if (!message) {
+      return res.status(404).json({ message: "Message not found" });
+    }
+    if (!message.senderId.equals(userId)) {
+      return res.status(400).json({ message: "You can only edit your own messages" });
+    }
+
+    if (text !== undefined) {
+      message.text = text;
+      message.isEdited = true;
+    }
+
+    if (lat && lng) {
+      message.location = { lat, lng };
+      message.isEdited = true;
+    }
+    const updatedMessage = await message.save()
+    const io = getIO();
+    const payload = {
+      messageId: updatedMessage._id,
+      text: updatedMessage.text,
+      location: updatedMessage.location,
+      isEdited: updatedMessage.isEdited
+    };
+
+    if (updatedMessage.receiverId) {
+      io.to(updatedMessage.receiverId.toString()).emit("messageUpdated", payload);
+    }
+    console.log(`update message sent for receiver:${updatedMessage.receiverId}`);
+    if (updatedMessage.groupId) {
+      const group = await Group.findById(updatedMessage.groupId);
+      group.participants.forEach((userId) => {
+        const socketId = getReceiverSocketId(userId.toString());
+        if (socketId) {
+          io.to(socketId).emit("messageUpdated", payload);
+        }
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "Message updated successfully",
+      data: updatedMessage,
+    });
+  } catch (error) {
+    console.error("Error in sendMessage:", error);
+    res.status(500).json({ message: "server error", error });
+  }
+};
 export const messageDeleteByUser = async (req, res) => {
   try {
     const { messageId } = req.params;
@@ -301,18 +313,24 @@ export const messageDeleteByUser = async (req, res) => {
 
       // Socket se dono side notify karo
       const io = getIO();
-      const receiverSocketId = getReceiverSocketId(
-        message.receiverId.toString()
-      );
-      const senderSocketId = getReceiverSocketId(userId.toString());
-
       const payload = { messageId, deletedForEveryone: true };
 
-      if (receiverSocketId) {
-        io.to(receiverSocketId).emit("messageDeleted", payload);
+      if(message.receiverId){
+        const receiverSocketId = getReceiverSocketId(message.receiverId.toString());
+        const senderSocketId = getReceiverSocketId(userId.toString());
+        if (receiverSocketId) {
+          io.to(receiverSocketId).emit("messageDeleted", payload);
+        }
+        if (senderSocketId) {
+          io.to(senderSocketId).emit("messageDeleted", payload);
+        }
       }
-      if (senderSocketId) {
-        io.to(senderSocketId).emit("messageDeleted", payload);
+      if (message.groupId) {
+        const group = await Group.findById(message.groupId);
+        group.participants.forEach((userId) => {
+          const socketId = getReceiverSocketId(userId.toString());
+          io.to(socketId).emit("messageDeleted", payload)
+        })
       }
 
       return res.status(200).json({

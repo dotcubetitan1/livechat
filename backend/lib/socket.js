@@ -5,7 +5,7 @@ import Group from "../models/Group.js";
 let io;
 export const userSocketMap = {}; // { userId: socketId }
 
-export const initSocket = async(server) => {
+export const initSocket = async (server) => {
   io = new Server(server, {
     cors: {
       origin: "*",
@@ -15,7 +15,7 @@ export const initSocket = async(server) => {
 
   io.use(socketAuthMiddleware);
 
-  io.on("connection", async(socket) => {
+  io.on("connection", async (socket) => {
     console.log("User connected:", socket.user.fullName || socket.user.email);
 
     const userId = socket.userId;
@@ -30,21 +30,14 @@ export const initSocket = async(server) => {
 
     const groups = await Group.find({ participants: userId }).select("_id").lean();
     groups.forEach((group) => {
-      socket.join(group._id.toString());
-      console.log(`User ${socket.user.fullName} joined group room: ${group._id}`);
-    });
+      socket.join(group._id.toString())
+      console.log(`user ${socket.user.fullName} join the group `)
+    })
 
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
-    // socket.on("joinGroup", (groupId) => {
-    //   socket.join(groupId);
-    //   console.log(`User ${socket.user.fullName} manually joined group: ${groupId}`);
-    // });
-
     console.log(`User ${socket.user.fullName} connected. Device count: ${userSocketMap[userId].length}`);
     console.log("Current online users:", Object.keys(userSocketMap));
-
-    // io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
     socket.on("disconnect", () => {
       // Sirf wahi socket ID remove karein jo disconnect hui hai
