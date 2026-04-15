@@ -670,16 +670,13 @@ const ChatPage = () => {
   const { userId } = useParams();
   const { socketRef, socketConnected } = useOutletContext();
   const [preview, setPreview] = useState(null);
-  const [messages, setMessages] = useState([]); // ✅ ADD THIS - messages state yahan rakhna zaroori hai
-  const [images, setImages] = useState([]); // ✅ ADD THIS - images state bhi yahan
-  const [text, setText] = useState(""); // ✅ ADD THIS
+  const [messages, setMessages] = useState([]);
+  const [images, setImages] = useState([]); 
+  const [text, setText] = useState(""); 
 
-  // ✅ MessagesArea se messages update karne ke liye
   const handleMessagesUpdate = (newMessages) => {
     setMessages(newMessages);
   };
-
-  // ✅ InputBar se naya message aane par
   const handleNewMessage = (newMsg) => {
     setMessages((prev) => {
       if (prev.some(m => m._id === newMsg._id)) return prev;
@@ -695,16 +692,16 @@ const ChatPage = () => {
         socketRef={socketRef}
         socketConnected={socketConnected}
         setPreview={setPreview}
-        messages={messages} // ✅ PASS messages
-        setMessages={handleMessagesUpdate} // ✅ PASS setMessages function
+        messages={messages} 
+        setMessages={handleMessagesUpdate} 
       />
       <InputBar
         userId={userId}
         onMessageSent={handleNewMessage}
-        images={images} // ✅ PASS images
-        setImages={setImages} // ✅ PASS setImages
-        text={text} // ✅ PASS text
-        setText={setText} // ✅ PASS setText
+        images={images} 
+        setImages={setImages} 
+        text={text} 
+        setText={setText} 
       />
       <PreviewModal preview={preview} onClose={() => setPreview(null)} />
     </>

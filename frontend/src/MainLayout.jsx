@@ -21,7 +21,7 @@ const MainLayout = () => {
 
   const [groups, setGroups] = useState([]);
   const [activeTab, setActiveTab] = useState(() => {
-    return localStorage.getItem("activeTab")
+    return localStorage.getItem("activeTab") || "chats"
   }); //chats, "groups"
   const [showCreateGroup, setShowCreateGroup] = useState(false);
 
@@ -30,6 +30,7 @@ const MainLayout = () => {
   const location = useLocation();
 
   const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user"))
 
 const isDetailPage = location.pathname.match(/^\/(chat|group|media)\/.+/);
 const isProfilePage = location.pathname.includes("/profile");
@@ -144,10 +145,9 @@ const hideSidebarOnMobile = isDetailPage || isProfilePage;
         ${hideSidebarOnMobile ? " hidden md:block" : "block"}
       `}>
         <div className="bg-[#075E54] px-4 py-4 flex items-center justify-between">
-          <h1 className="text-white text-lg font-semibold">WhatsApp</h1>
+          <h1 className="text-white text-lg font-semibold">{user?.fullName}</h1>
           <div className="flex items-center gap-3">
             {/* + icon — group banane ke liye */}
-
             <div
               onClick={() => setShowCreateGroup(true)}
               className="text-white/80 cursor-pointer text-xl p-1">
