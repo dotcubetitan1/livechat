@@ -1,21 +1,19 @@
-import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
-import SignUpPage from "./pages/SignUpPage";
-import LoginPage from "./pages/LoginPage";
-import ChatPage from "./pages/ChatPage";
-import GroupChatPage from "./pages/GroupChatPage";
+import { RouterProvider, createBrowserRouter, Navigate } from "react-router-dom";
+import SignUpPage from "./pages/SignUp";
+import LoginPage from "./pages/Login";
+import ChatPage from "./pages/Chat";
+import GroupChatPage from "./pages/GroupChat";
 import MainLayout from "./MainLayout";
-import ProfilePage from "./pages/ProfilePage";
-import AllMediaPage from "./pages/AllMediaPage"
+import ProfilePage from "./pages/Profile";
+import Media from "./pages/Media";
 import { onMessage } from "firebase/messaging";
 import { getFCMToken, messaging } from "./config/firebase";
 import { useEffect } from "react";
-function App() {
+
+const FCMHandler = () => {
   useEffect(() => {
     getFCMToken();
-
     const unsubscribe = onMessage(messaging, (payload) => {
-      console.log("Foreground message:", payload);
-
       const title = payload.data?.title;
       const body = payload.data?.body;
       const senderId = payload.data?.senderId;
@@ -24,19 +22,15 @@ function App() {
       const isAlreadyInChat = currentPath === `/chat/${senderId}`;
       if (isAlreadyInChat) return;
 
-      // Foreground mein bhi notification dikhao
       if (Notification.permission === "granted") {
         const notification = new Notification(title, {
           body: body,
           icon: "/for.webp",
           tag: `chat-${senderId}`,
-          data: {
-            senderId: senderId,
-          }
+          data: { senderId },
         });
 
         notification.onclick = (event) => {
-          console.log("Foreground notification clicked");
           event.preventDefault();
           notification.close();
           window.location.href = `/chat/${senderId}`;
@@ -47,21 +41,65 @@ function App() {
     return () => unsubscribe();
   }, []);
 
-  return (
-    <Routes>
-      <Route path="/" element={<Navigate to="/signup" replace />} />
-      <Route path="/signup" element={<SignUpPage />} />
-      <Route path="/login" element={<LoginPage />} />
+  return null; // UI nahi render karta
+};
 
-      {/* LAYOUT ROUTES */}
-      <Route path="/" element={<MainLayout />}>
-        <Route path="chat" element={<div className="md:flex hidden items-center justify-center h-screen font-semibold">Select user to start chat</div>} />
-        <Route path="chat/:userId" element={<ChatPage />} />
-        <Route path="group/:groupId" element={<GroupChatPage />} />
-        <Route path="profile" element={<ProfilePage />} />
-        <Route path="media/:userId" element={<AllMediaPage />} />
-      </Route>
-    </Routes>
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Navigate to="/signup" replace />,
+  },
+  {
+    path: "/signup",
+    element: <SignUpPage />,
+  },
+  {
+    path: "/login",
+    element: <LoginPage />,
+  },
+  {
+    path: "/",
+    element: <MainLayout />,
+    children: [
+      {
+        index: true, 
+        path: "chat",
+        element: (
+          <div className="hidden md:flex items-center justify-center h-screen font-semibold text-gray-400">
+            Select user to start chat
+          </div>
+        ),
+      },
+      {
+        path: "chat/:userId",
+        element: <ChatPage />,
+      },
+      {
+        path: "group/:groupId",
+        element: <GroupChatPage />,
+      },
+      {
+        path: "profile",
+        element: <ProfilePage />,
+      },
+      {
+        path: "media/:userId",
+        element: <Media />,
+      },
+    ],
+  },
+  {
+    path:"*",
+    element:<p className="flex justify-center items-center h-screen bg-black text-white font-bold text-[24px]">Page Not Found</p>
+  }
+]);
+
+function App() {
+  return (
+    <>
+      <FCMHandler />
+      <RouterProvider router={router} />
+    </>
   );
 }
 

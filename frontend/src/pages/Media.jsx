@@ -4,7 +4,7 @@ import { API_BASE_URL } from "../api/config";
 import { useNavigate, useParams } from "react-router-dom";
 import { IoArrowBackCircleOutline } from "react-icons/io5";
 
-const AllMediaPage = () => {
+const Media = () => {
    const { userId } = useParams();
   const [activeTab, setActiveTab] = useState("images");
   const [allMedia, setAllMedia] = useState({ allVideo: [], allImage: [] });
@@ -83,4 +83,4 @@ const AllMediaPage = () => {
   );
 };
 
-export default AllMediaPage;
+export default Media;
